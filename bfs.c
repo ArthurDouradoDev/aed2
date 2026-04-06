@@ -54,11 +54,23 @@ void zerar_flags(vertice* g){
 }
 
 void largura(vertice *g, int i) {
+    zerar_flags(g);
+    FILA F;
+    inicializar(&F);
+    entrar_fila(g, g[i].inicio->adj);
+    g[i].flag = 1;
 
+    while(F.inicio){
+        i = sair_fila(&F);
+        no* p = g[i].inicio;
+        while(p){
+            if(g[p->adj].flag == 0){
+                entrar_fila(&F, p->adj);
+                g[i].flag = 1;
+            }
+            p = p->prox;
+        }
+        g[i].flag = 2;
+    }
 }
 
-/*
-1- Zerar as flags
-2- Criar a fila
-3- 
-*/

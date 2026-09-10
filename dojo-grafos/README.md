@@ -248,9 +248,21 @@ Aviso honesto: limpar os dados do navegador apaga o que não foi exportado.
 ### Publicar
 
 O workflow `.github/workflows/publicar-dojo.yml` gera `web/dados/` a partir
-do C, roda as três provas acima e só então publica no GitHub Pages. Como o
-catálogo, os esqueletos e o mapa do campus saem do próprio código
-(`./dojo.exe --dump-json`), site e repositório não têm como divergir.
+do C, confere os 51 exercícios no gcc e no interpretador, e publica no
+GitHub Pages. Como o catálogo, os esqueletos e o mapa do campus saem do
+próprio código (`./dojo.exe --dump-json`), site e repositório não têm como
+divergir.
+
+**Uma vez só, antes da primeira publicação:** no GitHub, vá em
+**Settings → Pages → Build and deployment** e escolha **Source: GitHub
+Actions**. O token do workflow não tem permissão para ligar isso sozinho.
+Feito isso, cada push republica o site.
+
+O teste diferencial roda num job à parte, em paralelo. No runner do GitHub
+ele leva de dez a vinte minutos, porque boa parte dos erros plantados são
+laços infinitos que só terminam no timeout, e não faria sentido esperar tudo
+isso para ver uma correção de texto no ar. Se ele ficar vermelho, o site já
+está publicado e dá para resolver com calma.
 
 ---
 

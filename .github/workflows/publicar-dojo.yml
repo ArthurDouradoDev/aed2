@@ -7,6 +7,10 @@
 #
 #   construir   rapido (segundos): gera os dados, confere os 51 exercicios
 #               contra o gabarito no gcc e no interpretador, e publica.
+#
+# ANTES DA PRIMEIRA PUBLICACAO, uma vez so: no GitHub, Settings > Pages >
+# Build and deployment > Source: GitHub Actions. O token do workflow nao tem
+# permissao para ligar isso sozinho.
 #   fidelidade  lento (dez a vinte minutos): roda o teste diferencial, que
 #               compara gcc e interpretador nos 51 exercicios para cada erro
 #               plantado. Nao trava a publicacao; se ele ficar vermelho, o
@@ -57,13 +61,10 @@ jobs:
         working-directory: dojo-grafos
         run: node web/teste/suite.js
 
-      - uses: actions/configure-pages@v5
-        with:
-          # Liga o GitHub Pages sozinho na primeira vez, para nao ser preciso
-          # mexer em Settings. Se a conta nao permitir, o passo falha e ai e
-          # so ligar a mao em Settings > Pages > Source: GitHub Actions.
-          enablement: true
-
+      # Nao ha actions/configure-pages aqui de proposito: ele so serve para
+      # descobrir a URL base, e o site usa caminhos relativos. Sem ele, um
+      # Pages ainda nao ligado falha no job de publicar (onde o recado faz
+      # sentido) em vez de derrubar a construcao inteira.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dojo-grafos/web

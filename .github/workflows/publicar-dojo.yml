@@ -7,14 +7,14 @@
 #
 #   construir   rapido (segundos): gera os dados, confere os 51 exercicios
 #               contra o gabarito no gcc e no interpretador, e publica.
-#
-# ANTES DA PRIMEIRA PUBLICACAO, uma vez so: no GitHub, Settings > Pages >
-# Build and deployment > Source: GitHub Actions. O token do workflow nao tem
-# permissao para ligar isso sozinho.
 #   fidelidade  lento (dez a vinte minutos): roda o teste diferencial, que
 #               compara gcc e interpretador nos 51 exercicios para cada erro
 #               plantado. Nao trava a publicacao; se ele ficar vermelho, o
 #               site ja esta no ar e da para reagir com calma.
+#
+# ANTES DA PRIMEIRA PUBLICACAO, uma vez so: no GitHub, em
+# Settings > Pages > Build and deployment, escolher Source: GitHub Actions.
+# O token do workflow nao tem permissao para ligar isso sozinho.
 name: publicar o dojo
 
 on:

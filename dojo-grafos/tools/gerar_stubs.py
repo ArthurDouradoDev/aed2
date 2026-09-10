@@ -323,12 +323,16 @@ def bloco(idx, assinatura, retorno, linhas, ref):
 
 def main():
     forcar = "--forcar" in sys.argv
-    os.makedirs(DESTINO, exist_ok=True)
+    destino = DESTINO
+    if "--destino" in sys.argv:
+        destino = sys.argv[sys.argv.index("--destino") + 1]
+        forcar = True
+    os.makedirs(destino, exist_ok=True)
     data = datetime.date.today().isoformat()
     criados, pulados = [], []
 
     for n, (arquivo, titulo, cmd, funcs) in enumerate(NIVEIS, start=1):
-        caminho = os.path.join(DESTINO, arquivo)
+        caminho = os.path.join(destino, arquivo)
         if os.path.exists(caminho) and not forcar:
             pulados.append(arquivo)
             continue
@@ -341,9 +345,9 @@ def main():
         criados.append(arquivo)
 
     for a in criados:
-        print("  criado : src/aluno/%s" % a)
+        print("  criado : %s" % os.path.join(destino, a))
     for a in pulados:
-        print("  mantido: src/aluno/%s (use --forcar para sobrescrever)" % a)
+        print("  mantido: %s (use --forcar para sobrescrever)" % os.path.join(destino, a))
 
 
 if __name__ == "__main__":

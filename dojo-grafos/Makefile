@@ -32,7 +32,8 @@ EXE_GAB = dojo_gabarito.exe
 G ?= 1
 
 # ---------------------------------------------------------------------------
-.PHONY: painel n1 n2 n3 n4 n5 n6 n7 dica app conferir novociclo limpar ajuda
+.PHONY: painel n1 n2 n3 n4 n5 n6 n7 dica app conferir novociclo limpar ajuda \
+        web site testes-web testes-tudo
 
 painel: $(EXE)
 	@$(PY) tools/run.py $(EXE)
@@ -80,6 +81,25 @@ build/gb_%.o: gabarito/%.c include/grafo.h include/dojo.h
 	@$(CC) $(CFLAGS) -Dmalloc=dojo_malloc -c $< -o $@
 
 # ---------------------------------------------------------------------------
+#  Versao web (mesmo dojo, rodando no navegador)
+# ---------------------------------------------------------------------------
+web:
+	@$(PY) tools/gerar_web_dados.py
+
+site: web
+	@echo "  abra http://localhost:8000"
+	@$(PY) -m http.server 8000 --directory web
+
+testes-web:
+	@node web/teste/suite.js
+
+# Prova que o interpretador do navegador da o mesmo veredito do gcc.
+testes-tudo: web
+	@node web/teste/suite.js
+	@node web/teste/diferencial.js
+	@node web/teste/navegador.mjs
+
+# ---------------------------------------------------------------------------
 novociclo:
 	@$(PY) tools/novociclo.py
 
@@ -88,3 +108,7 @@ limpar:
 
 ajuda:
 	@$(PY) tools/run.py --ajuda
+	@echo "    make web                   gera os dados do site"
+	@echo "    make site                  sobe o Dojo no navegador em localhost:8000"
+	@echo "    make testes-tudo           roda toda a bateria de verificacao"
+

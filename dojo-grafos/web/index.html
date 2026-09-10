@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dojo de Grafos</title>
+<meta name="description" content="Treino de implementacoes de grafos em C, direto no navegador.">
+<meta name="theme-color" content="#0f1319">
+<link rel="stylesheet" href="css/estilo.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone.svg">
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'&gt;&lt;circle cx='8' cy='8' r='4' fill='%234dd4ac'/&gt;&lt;circle cx='24' cy='16' r='4' fill='%2359a5ff'/&gt;&lt;circle cx='10' cy='25' r='4' fill='%23ffb454'/&gt;&lt;path d='M8 8 24 16 10 25Z' stroke='%234dd4ac' stroke-width='2' fill='none'/&gt;&lt;/svg&gt;">
+</head>
+<body>
+
+<header class="topo">
+    <div class="marca">Dojo de Grafos <small>ACH2024 &middot; grafos na unha</small></div>
+    <div class="placar" title="exercicios concluidos"><b id="placar-n">0</b><span>/51</span></div>
+    <nav class="abas" id="abas">
+        <button data-tela="painel" class="ativa">Painel</button>
+        <button data-tela="treino">Treino</button>
+        <button data-tela="campus">Campus</button>
+        <button data-tela="material">Material</button>
+    </nav>
+    <button class="icone-bt" id="bt-tema" title="alternar tema claro/escuro" aria-label="alternar tema">&#9681;</button>
+    <button class="icone-bt" id="bt-config" title="salvar, exportar e importar" aria-label="opcoes">&#9881;</button>
+</header>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="tela ativa" id="tela-painel">
+    <div class="conteudo">
+        <div class="hero">
+            <div class="txt">
+                <h1 id="hero-titulo">Bem-vindo ao Dojo</h1>
+                <p id="hero-texto">Carregando...</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="bt-grande" id="bt-continuar">Continuar de onde parei</button>
+                    <button class="bt-secundario" id="bt-conferir">Rodar os 51 agora</button>
+                </div>
+            </div>
+            <div class="anel" id="anel"></div>
+        </div>
+
+        <div class="rotulo">O campus do seu progresso</div>
+        <div class="mapa-caixa compacto" style="margin-bottom:22px">
+            <div id="mapa-painel" style="width:100%"></div>
+            <div class="legenda-progresso" id="legenda-progresso"></div>
+        </div>
+
+        <div class="rotulo">Os sete niveis</div>
+        <div class="niveis" id="niveis"></div>
+
+        <div class="rotulo">Historico de ciclos</div>
+        <div id="historico"></div>
+    </div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="tela" id="tela-treino">
+    <div class="faixa">
+        <div class="pilulas" id="pilulas"></div>
+        <div class="chips" id="chips"></div>
+    </div>
+    <div class="oficina">
+        <div class="coluna-editor">
+            <div class="abas-arquivo" id="abas-arquivo"></div>
+            <div class="editor" id="editor"></div>
+            <div class="acoes">
+                <button class="bt principal" id="bt-rodar">Rodar nivel</button>
+                <button class="bt" id="bt-rodar-um">So este exercicio</button>
+                <button class="bt" id="bt-restaurar">Restaurar esqueleto</button>
+                <span class="estado" id="estado"></span>
+            </div>
+        </div>
+        <div class="coluna-lado">
+            <div class="abas-lado" id="abas-lado">
+                <button data-p="enunciado" class="ativa">Enunciado</button>
+                <button data-p="resultado">Resultado</button>
+                <button data-p="dicas">Dicas</button>
+            </div>
+            <div class="paineis">
+                <div class="painel-lado ativa" id="p-enunciado"></div>
+                <div class="painel-lado" id="p-resultado"></div>
+                <div class="painel-lado" id="p-dicas"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="tela" id="tela-campus">
+    <div class="conteudo">
+        <h1 style="margin:0 0 4px;font-size:21px">Campus EACH</h1>
+        <p style="color:var(--fraco);margin:0 0 18px">
+            Doze funcionalidades rodando em cima do seu codigo. Cada uma abre
+            quando o exercicio de que ela depende passa nos testes.
+        </p>
+        <div class="campus-grade">
+            <div>
+                <div class="mapa-caixa">
+                    <div id="mapa-campus"></div>
+                    <div class="legenda" id="legenda-campus"></div>
+                </div>
+                <div id="area-params" style="margin-top:12px"></div>
+                <div id="area-resultado" style="margin-top:12px"></div>
+            </div>
+            <div>
+                <div class="rotulo" style="margin-top:0">Funcionalidades</div>
+                <div class="func-lista" id="func-lista"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="tela" id="tela-material">
+    <div class="conteudo">
+        <div class="pilulas" id="pilulas-material" style="margin-bottom:16px;flex-wrap:wrap"></div>
+        <div class="doc" id="doc"></div>
+    </div>
+</section>
+
+<div class="cortina" id="cortina"><div class="caixa" id="caixa"></div></div>
+
+<script type="module" src="js/app.js"></script>
+<script>
+/* Guarda o site para funcionar sem rede depois da primeira visita. */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+}
+</script>
+</body>
+</html>

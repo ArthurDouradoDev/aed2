@@ -14,6 +14,16 @@ cd dojo-grafos && make
 cd dojo-grafos; make
 ```
 
+E, se você não estiver no seu computador, o **mesmo Dojo roda no navegador**:
+
+```bash
+make site        # abre em http://localhost:8000
+```
+
+O site também fica publicado no GitHub Pages, funciona no celular e continua
+funcionando sem internet depois da primeira visita. Detalhes na seção
+[O Dojo no navegador](#o-dojo-no-navegador).
+
 ---
 
 ## A ideia
@@ -168,6 +178,94 @@ proposital — o exercício é implementar a especificação, não o palpite.
 
 ---
 
+## O Dojo no navegador
+
+A pasta `web/` é o Dojo inteiro rodando como site estático: os mesmos 51
+exercícios, os mesmos testes, os mesmos enunciados e as mesmas dicas. Não é
+uma versão reduzida nem um simulador — **o C que você escreve continua sendo
+C de verdade**, interpretado com memória byte a byte, ponteiros que são
+endereços reais e `malloc` que devolve lixo, como manda o padrão.
+
+| comando | o que faz |
+|---|---|
+| `make site` | gera os dados e abre o Dojo em `http://localhost:8000` |
+| `make web` | só regenera `web/dados/` a partir do C |
+| `make testes-web` | roda os 51 testes no interpretador do navegador |
+| `make testes-tudo` | a bateria inteira, incluindo a comparação com o gcc |
+
+### O que ele detecta que o terminal não detecta
+
+O interpretador acompanha cada byte da memória, então em vez de um segfault
+mudo você recebe a causa com nome e sobrenome:
+
+- **leitura de campo não inicializado depois do `malloc`** — o clássico
+  "esqueci o `novo->prox = NULL`", que no gcc às vezes passa em silêncio;
+- **uso de memória já liberada** — `free(p)` seguido de `p = p->prox`;
+- **variável local usada antes de receber valor** — `int gs; gs = gs + ...`;
+- **escrita além do bloco pedido ao `malloc`**, com o número do byte invadido;
+- **laço infinito**, interrompido em cerca de meio segundo (o dojo de
+  terminal simplesmente trava);
+- **recursão sem parada**, com a dica de marcar a flag antes de descer.
+
+### O campus, agora visível
+
+O Campus EACH virou mapa. Os oito locais e as nove ruas são os mesmos do
+`make app`, mas agora o desenho é uma leitura literal da `struct vertice`: a
+`flag` vira a borda do círculo (branco, cinza, preto), a `dist` vira etiqueta
+e a `cor` vira preenchimento. As doze funcionalidades continuam trancadas até
+o exercício correspondente passar.
+
+E tem uma coisa que o terminal nunca deu: depois que a busca roda, dá para
+**assistir ao seu próprio algoritmo**, quadro a quadro, com o mapa mudando e
+a linha do seu arquivo destacada. A onda concêntrica da busca em largura sai
+do papel.
+
+### Levar o trabalho daqui para lá e de volta
+
+O site guarda tudo no navegador e exporta `src/aluno/` em `.zip` no formato
+exato que este `Makefile` espera: descompacte por cima e o `make n3` continua
+de onde o site parou. A volta funciona igual (importe o `.zip`, os `.c`
+soltos ou o backup `.json`).
+
+Aviso honesto: limpar os dados do navegador apaga o que não foi exportado.
+
+### Por que dá para confiar
+
+`make testes-tudo` roda três provas:
+
+1. os 51 testes contra o gabarito precisam dar **ok**, e contra os esqueletos
+   vazios precisam dar **a fazer**;
+2. o teste **diferencial** pega mais de vinte erros que aluno comete de
+   verdade, roda cada um nos **51 exercícios com o gcc e com o navegador**, e
+   exige o mesmo veredito nos dois. Se o dojo de terminal reprova, o site
+   reprova; se aprova, o site aprova. A única folga permitida está declarada:
+   quando o erro corrompe memória (comportamento indefinido em C), o site pode
+   ser **mais** rigoroso que o gcc, nunca mais permissivo;
+3. um teste de navegador de verdade (Chromium) que escreve código, roda o
+   nível, confere as mensagens, abre o campus, assiste à animação, exporta o
+   zip e mede a tela do celular.
+
+### Publicar
+
+O workflow `.github/workflows/publicar-dojo.yml` gera `web/dados/` a partir
+do C, confere os 51 exercícios no gcc e no interpretador, e publica no
+GitHub Pages. Como o catálogo, os esqueletos e o mapa do campus saem do
+próprio código (`./dojo.exe --dump-json`), site e repositório não têm como
+divergir.
+
+**Uma vez só, antes da primeira publicação:** no GitHub, vá em
+**Settings → Pages → Build and deployment** e escolha **Source: GitHub
+Actions**. O token do workflow não tem permissão para ligar isso sozinho.
+Feito isso, cada push republica o site.
+
+O teste diferencial roda num job à parte, em paralelo. No runner do GitHub
+ele leva de dez a vinte minutos, porque boa parte dos erros plantados são
+laços infinitos que só terminam no timeout, e não faria sentido esperar tudo
+isso para ver uma correção de texto no ar. Se ele ficar vermelho, o site já
+está publicado e dá para resolver com calma.
+
+---
+
 ## Estrutura
 
 ```
@@ -179,8 +277,15 @@ dojo-grafos/
 ├── src/testes/            os 51 testes
 ├── gabarito/              respostas (só abra depois de tentar)
 ├── historico/             seus ciclos anteriores
-└── tools/                 geração de esqueletos, reset, utilitários
+├── tools/                 geração de esqueletos, reset, dados do site
+└── web/                   o Dojo como site estático
+    ├── js/c/              lexer, pré-processador, parser e interpretador de C
+    ├── js/dojo/           os 51 testes e o Campus EACH
+    ├── js/ui/             editor, mapa, markdown, armazenamento
+    ├── dados/             GERADO a partir do C -- não editar à mão
+    └── teste/             suíte, teste diferencial e teste de navegador
 ```
 
-Só é preciso `gcc` e `make` — ambos já estão instalados aqui. O `python` é
-usado apenas pelos utilitários do Makefile.
+Para o dojo de terminal só é preciso `gcc` e `make`. O `python` é usado pelos
+utilitários do Makefile. Para o site, `node` só é necessário para rodar os
+testes: o site em si não precisa de build nenhum, é HTML, CSS e módulos ES.

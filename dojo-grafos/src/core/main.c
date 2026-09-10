@@ -16,6 +16,7 @@ static void liga_cores(void) {}
 #endif
 
 void campus_app(void);
+void campus_dump_json(void);
 
 /* ---------------------------------------------------------------------------
  *  Cada teste roda num SUBPROCESSO. Assim, se o seu codigo estourar a memoria
@@ -24,12 +25,27 @@ void campus_app(void);
  * ------------------------------------------------------------------------- */
 static char meu_caminho[1024] = "dojo.exe";
 
+/* O cmd do Windows precisa das aspas externas; o sh do Linux e do macOS
+   engasga com elas. Cada um com a sua forma. */
+static void monta_cmd(char* destino, int tam, int indice, int quieto) {
+#ifdef _WIN32
+    snprintf(destino, tam, "\"\"%s\" --exec %d%s\"", meu_caminho, indice,
+             quieto ? " --quieto" : "");
+#else
+    snprintf(destino, tam, "\"%s\" --exec %d%s", meu_caminho, indice,
+             quieto ? " --quieto" : "");
+#endif
+}
+
 int dojo_status(int indice) {
     char cmd[1200];
     int ret;
     if (indice < 0 || indice >= N_EXERCICIOS) return R_FALHOU;
-    snprintf(cmd, sizeof cmd, "\"\"%s\" --exec %d --quieto\"", meu_caminho, indice);
+    monta_cmd(cmd, sizeof cmd, indice, 1);
     ret = system(cmd);
+#ifndef _WIN32
+    if (ret != -1 && (ret & 0x7f) == 0) ret = (ret >> 8) & 0xff;   /* WEXITSTATUS */
+#endif
     if (ret == R_OK || ret == R_STUB || ret == R_FALHOU) return ret;
     return R_QUEBROU;   /* qualquer outro codigo de saida = o programa morreu */
 }
@@ -39,9 +55,14 @@ int dojo_status(int indice) {
    sozinho; qualquer outro valor quer dizer que ele morreu antes disso. */
 static int roda_visivel(int indice) {
     char cmd[1200];
-    snprintf(cmd, sizeof cmd, "\"\"%s\" --exec %d\"", meu_caminho, indice);
+    int ret;
+    monta_cmd(cmd, sizeof cmd, indice, 0);
     fflush(stdout);
-    return system(cmd);
+    ret = system(cmd);
+#ifndef _WIN32
+    if (ret != -1 && (ret & 0x7f) == 0) ret = (ret >> 8) & 0xff;
+#endif
+    return ret;
 }
 
 static int status[128];
@@ -167,6 +188,63 @@ static int exec_teste(int idx, int quieto) {
     return st;
 }
 
+/* ---------------------------------------------------------------------------
+ *  --dump-json: despeja o catalogo inteiro em JSON.
+ *  E daqui que a versao web tira os enunciados e as dicas, para nao existirem
+ *  duas listas de exercicios que possam divergir.
+ * ------------------------------------------------------------------------- */
+static void json_texto(const char* s) {
+    putchar('"');
+    for (; s && *s; s++) {
+        switch (*s) {
+            case '"':  fputs("\\\"", stdout); break;
+            case '\\': fputs("\\\\", stdout); break;
+            case '\n': fputs("\\n", stdout);  break;
+            case '\r': fputs("\\r", stdout);  break;
+            case '\t': fputs("\\t", stdout);  break;
+            default:
+                if ((unsigned char)*s < 0x20) printf("\\u%04x", (unsigned char)*s);
+                else putchar(*s);
+        }
+    }
+    putchar('"');
+}
+
+static void dump_json(void) {
+    int i, j;
+    printf("{\n  \"niveis\": [\n");
+    for (i = 0; i < N_NIVEIS; i++) {
+        printf("    {\"numero\": %d, \"titulo\": ", NIVEIS[i].numero);
+        json_texto(NIVEIS[i].titulo);
+        printf(", \"subtitulo\": ");
+        json_texto(NIVEIS[i].subtitulo);
+        printf(", \"arquivo\": ");
+        json_texto(NIVEIS[i].arquivo);
+        printf("}%s\n", i + 1 < N_NIVEIS ? "," : "");
+    }
+    printf("  ],\n  \"exercicios\": [\n");
+    for (i = 0; i < N_EXERCICIOS; i++) {
+        printf("    {\"nivel\": %d, \"num\": %d, \"nome\": ",
+               CATALOGO[i].nivel, CATALOGO[i].num);
+        json_texto(CATALOGO[i].nome);
+        printf(", \"assinatura\": ");
+        json_texto(CATALOGO[i].assinatura);
+        printf(", \"enunciado\": ");
+        json_texto(CATALOGO[i].enunciado);
+        printf(", \"referencia\": ");
+        json_texto(CATALOGO[i].referencia);
+        printf(", \"dicas\": [");
+        for (j = 0; j < 3; j++) {
+            json_texto(CATALOGO[i].dicas[j]);
+            if (j < 2) printf(", ");
+        }
+        printf("]}%s\n", i + 1 < N_EXERCICIOS ? "," : "");
+    }
+    printf("  ],\n  \"campus\": ");
+    campus_dump_json();
+    printf("\n}\n");
+}
+
 static Exercicio* acha(int nivel, int num) {
     int i;
     for (i = 0; i < N_EXERCICIOS; i++)
@@ -278,6 +356,8 @@ int main(int argc, char** argv) {
         if (!quieto) liga_cores();
         return exec_teste(atoi(argv[2]), quieto);
     }
+
+    if (argc >= 2 && strcmp(argv[1], "--dump-json") == 0) { dump_json(); return 0; }
 
     liga_cores();
 

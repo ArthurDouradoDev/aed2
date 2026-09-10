@@ -301,6 +301,26 @@ static Opcao MENU[] = {
 };
 static const int N_MENU = 12;
 
+/* Despeja o mapa do campus e a tabela de destravamento em JSON. A versao
+   web le isso, entao o mapa nunca precisa ser redigitado em outro lugar. */
+void campus_dump_json(void) {
+    int i;
+    printf("{\n    \"locais\": [\n");
+    for (i = 0; i < V; i++)
+        printf("      {\"id\": %d, \"nome\": \"%s\", \"tipo\": %d, \"rotulo\": \"%s\"}%s\n",
+               i, NOME[i], TIPO[i], NOME_TIPO(TIPO[i]), i + 1 < V ? "," : "");
+    printf("    ],\n    \"trechos\": [\n");
+    for (i = 0; i < N_TRECHOS; i++)
+        printf("      {\"de\": %d, \"para\": %d, \"minutos\": %d}%s\n",
+               TRECHO[i][0], TRECHO[i][1], TRECHO[i][2], i + 1 < N_TRECHOS ? "," : "");
+    printf("    ],\n    \"menu\": [\n");
+    for (i = 0; i < N_MENU; i++)
+        printf("      {\"rotulo\": \"%s\", \"nivel\": %d, \"num\": %d, \"funcao\": \"%s\"}%s\n",
+               MENU[i].rotulo, MENU[i].nivel, MENU[i].num,
+               nome_ex(MENU[i].nivel, MENU[i].num), i + 1 < N_MENU ? "," : "");
+    printf("    ]\n  }");
+}
+
 void campus_app(void) {
     vertice* g;
     int op, i, abertas;

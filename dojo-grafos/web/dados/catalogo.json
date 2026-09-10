@@ -1,0 +1,884 @@
+{
+ "niveis": [
+  {
+   "numero": 1,
+   "titulo": "Matriz de adjacencia",
+   "subtitulo": "as seis operacoes basicas, do jeito que o professor escreveu no quadro",
+   "arquivo": "src/aluno/n1_matriz.c"
+  },
+  {
+   "numero": 2,
+   "titulo": "Lista de adjacencia",
+   "subtitulo": "as mesmas operacoes com ponteiros -- onde mora a maioria dos erros",
+   "arquivo": "src/aluno/n2_lista.c"
+  },
+  {
+   "numero": 3,
+   "titulo": "Transformacoes sobre grafos",
+   "subtitulo": "transposto, conversao, subgrafo, complemento: exercicios 1 a 9, 19 e 20",
+   "arquivo": "src/aluno/n3_transformacoes.c"
+  },
+  {
+   "numero": 4,
+   "titulo": "Busca em profundidade",
+   "subtitulo": "flags branco/cinza/preto, ciclos, componentes conexas",
+   "arquivo": "src/aluno/n4_profundidade.c"
+  },
+  {
+   "numero": 5,
+   "titulo": "Fila e busca em largura",
+   "subtitulo": "caminho mais curto em numero de arestas",
+   "arquivo": "src/aluno/n5_largura.c"
+  },
+  {
+   "numero": 6,
+   "titulo": "Ponderados: Dijkstra e coloracao",
+   "subtitulo": "custo minimo, coloracao e reconstrucao de caminho",
+   "arquivo": "src/aluno/n6_ponderados.c"
+  },
+  {
+   "numero": 7,
+   "titulo": "Desafios da lista",
+   "subtitulo": "os exercicios da lista do professor que nao aparecem no caderno",
+   "arquivo": "src/aluno/n7_desafios.c"
+  }
+ ],
+ "exercicios": [
+  {
+   "nivel": 1,
+   "num": 1,
+   "nome": "inicializar_m",
+   "assinatura": "void inicializar_m(int m[V][V])",
+   "enunciado": "Zera a matriz inteira: nenhuma aresta existe no comeco.",
+   "referencia": "caderno, pag. 3 (Funcao de inicializacao)",
+   "dicas": [
+    "Sao dois fors encaixados, i para a linha e j para a coluna.",
+    "O for de dentro precisa percorrer TODAS as colunas de cada linha.",
+    "void inicializar(int m[v][v]) { int i, j; for (i=0;i<v;i++) { for (j=0;j<v;j++) { m[i][j] = 0; } } }"
+   ]
+  },
+  {
+   "nivel": 1,
+   "num": 2,
+   "nome": "aresta_existe_m",
+   "assinatura": "bool aresta_existe_m(int m[V][V], int v1, int v2)",
+   "enunciado": "Devolve TRUE se existe a aresta v1 -> v2 e FALSE caso contrario.",
+   "referencia": "caderno, pag. 3 (Funcao para verificar se aresta existe)",
+   "dicas": [
+    "A matriz responde isso em uma unica consulta: m[v1][v2].",
+    "Repare na ordem: a LINHA e a origem, a COLUNA e o destino. Custo O(1).",
+    "if (m[v1][v2] == 1) { return true; } else { return false; }"
+   ]
+  },
+  {
+   "nivel": 1,
+   "num": 3,
+   "nome": "inserir_aresta_m",
+   "assinatura": "void inserir_aresta_m(int m[V][V], int v1, int v2)",
+   "enunciado": "Marca a aresta v1 -> v2. O grafo aqui e DIRIGIDO.",
+   "referencia": "caderno, pag. 3 (Funcao para inserir aresta)",
+   "dicas": [
+    "Uma linha basta.",
+    "A linha m[v2][v1] = 1 so entra se o grafo for NAO dirigido. Aqui, nao.",
+    "m[v1][v2] = 1;   // se nao dirigido: m[v2][v1] = 1;"
+   ]
+  },
+  {
+   "nivel": 1,
+   "num": 4,
+   "nome": "excluir_aresta_m",
+   "assinatura": "bool excluir_aresta_m(int m[V][V], int v1, int v2)",
+   "enunciado": "Apaga a aresta v1 -> v2. Devolve FALSE se ela nao existia.",
+   "referencia": "caderno, pag. 3 (Funcao para excluir aresta)",
+   "dicas": [
+    "Antes de apagar, verifique se a aresta esta la.",
+    "Se m[v1][v2] == 0, saia com return false ANTES de mexer na matriz.",
+    "if (m[v1][v2] == 0) { return false; } m[v1][v2] = 0; return true;"
+   ]
+  },
+  {
+   "nivel": 1,
+   "num": 5,
+   "nome": "grau_saida_m",
+   "assinatura": "int grau_saida_m(int m[V][V], int v1)",
+   "enunciado": "Conta quantas arestas SAEM de v1.",
+   "referencia": "caderno, pag. 3 (Funcao para calcular o grau de saida)",
+   "dicas": [
+    "Fixe a linha v1 e ande pelas colunas.",
+    "Como a matriz so tem 0 e 1, da para somar os valores em vez de comparar.",
+    "int i, gs = 0; for (i=0;i<v;i++) { gs = gs + m[v1][i]; } return gs;"
+   ]
+  },
+  {
+   "nivel": 1,
+   "num": 6,
+   "nome": "grau_entrada_m",
+   "assinatura": "int grau_entrada_m(int m[V][V], int v1)",
+   "enunciado": "Conta quantas arestas CHEGAM em v1.",
+   "referencia": "caderno, pag. 3 (Funcao para calcular o grau de entrada)",
+   "dicas": [
+    "E o espelho do exercicio anterior.",
+    "Agora quem fica fixo e a COLUNA v1; quem varia e a linha: m[i][v1].",
+    "int i, ge = 0; for (i=0;i<v;i++) { ge = ge + m[i][v1]; } return ge;"
+   ]
+  },
+  {
+   "nivel": 2,
+   "num": 1,
+   "nome": "alocar_l",
+   "assinatura": "vertice* alocar_l(void)",
+   "enunciado": "Aloca o vetor com os V vertices do grafo e devolve o ponteiro.",
+   "referencia": "caderno, pag. 4 (vertice* g = malloc...)",
+   "dicas": [
+    "Sao V structs vertice, uma para cada posicao do vetor.",
+    "ARMADILHA: sizeof(vertice*) e o tamanho de um PONTEIRO (so o endereco). Voce\n     quer sizeof(vertice), o tamanho da STRUCT inteira.",
+    "vertice* g = (vertice*) malloc(V * sizeof(vertice)); return g;"
+   ]
+  },
+  {
+   "nivel": 2,
+   "num": 2,
+   "nome": "inicializar_l",
+   "assinatura": "void inicializar_l(vertice* g)",
+   "enunciado": "Deixa a lista de todo vertice vazia (inicio = NULL). Zere tambem flag,\n  tipo, dist, cor e pais: os niveis seguintes contam com isso.",
+   "referencia": "caderno, pag. 4 (Funcao para inicializacao)",
+   "dicas": [
+    "Um for de 0 ate V-1.",
+    "Lista vazia quer dizer que a cabeca aponta para lugar nenhum.",
+    "int i; for (i=0;i<V;i++) { g[i].inicio = NULL; g[i].flag = 0; g[i].tipo = 0;\n     g[i].dist = 0; g[i].cor = 0; g[i].pais = 0; }"
+   ]
+  },
+  {
+   "nivel": 2,
+   "num": 3,
+   "nome": "aresta_existe_l",
+   "assinatura": "bool aresta_existe_l(vertice* g, int v1, int v2)",
+   "enunciado": "Percorre a lista de v1 procurando um no com adj == v2.",
+   "referencia": "caderno, pag. 4 (Funcao para verificar se aresta existe)",
+   "dicas": [
+    "Comece com no* p = g[v1].inicio e va andando com p = p->prox.",
+    "Se a lista acabar (p == NULL) sem achar, a resposta e false. Custo O(|V|).",
+    "no* p = g[v1].inicio; while (p) { if (p->adj == v2) { return true; }\n     p = p->prox; } return false;"
+   ]
+  },
+  {
+   "nivel": 2,
+   "num": 4,
+   "nome": "inserir_aresta_l",
+   "assinatura": "bool inserir_aresta_l(vertice* g, int v1, int v2)",
+   "enunciado": "Insere v1 -> v2 na CABECA da lista. Devolve FALSE se ja existia.\n  Inicialize tambem peso = 1 e id = 0 no no novo.",
+   "referencia": "caderno, pag. 4 (Funcao para inserir aresta)",
+   "dicas": [
+    "Reaproveite aresta_existe_l para nao duplicar aresta.",
+    "Inserir na cabeca sao dois passos: o novo aponta para o antigo inicio,\n     depois o inicio passa a ser o novo. ARMADILHA: malloc(sizeof(no)).",
+    "if (aresta_existe_l(g,v1,v2)) { return false; }\n     no* novo = (no*) malloc(sizeof(no));\n     novo->adj = v2; novo->peso = 1; novo->id = 0;\n     novo->prox = g[v1].inicio; g[v1].inicio = novo; return true;"
+   ]
+  },
+  {
+   "nivel": 2,
+   "num": 5,
+   "nome": "excluir_aresta_l",
+   "assinatura": "bool excluir_aresta_l(vertice* g, int v1, int v2)",
+   "enunciado": "Remove o no de v2 da lista de v1 e da free nele. FALSE se nao existia.",
+   "referencia": "caderno, pag. 5 (Funcao para excluir aresta)",
+   "dicas": [
+    "Voce precisa de DOIS ponteiros: p, que procura, e ant, o anterior a p.",
+    "ARMADILHA: se o no procurado for o PRIMEIRO, ant continua NULL. Nesse\n     caso quem muda e g[v1].inicio, nao ant->prox.",
+    "no* ant = NULL; no* p = g[v1].inicio;\n     while (p) { if (p->adj == v2) break; ant = p; p = p->prox; }\n     if (!p) return false;\n     if (ant) { ant->prox = p->prox; } else { g[v1].inicio = p->prox; }\n     free(p); return true;"
+   ]
+  },
+  {
+   "nivel": 2,
+   "num": 6,
+   "nome": "grau_saida_l",
+   "assinatura": "int grau_saida_l(vertice* g, int v1)",
+   "enunciado": "Conta quantos nos tem a lista de v1.",
+   "referencia": "caderno, pag. 3 (versao em lista do grau de saida)",
+   "dicas": [
+    "O tamanho da lista de v1 ja e a resposta.",
+    "Ande com p = p->prox somando 1 a cada no.",
+    "int gs = 0; no* p = g[v1].inicio; while (p) { gs++; p = p->prox; } return gs;"
+   ]
+  },
+  {
+   "nivel": 2,
+   "num": 7,
+   "nome": "grau_entrada_l",
+   "assinatura": "int grau_entrada_l(vertice* g, int v1)",
+   "enunciado": "Conta quantas arestas chegam em v1.",
+   "referencia": "caderno, pag. 3 (versao em lista do grau de entrada)",
+   "dicas": [
+    "Em lista nao existe coluna: e preciso olhar a lista de TODOS os vertices.",
+    "Dois lacos: um for por todos os i, e dentro dele um while na lista de i\n     contando quantas vezes aparece adj == v1. Custo O(|V| + |A|).",
+    "int i, ge = 0; for (i=0;i<V;i++) { no* p = g[i].inicio;\n     while (p) { if (p->adj == v1) ge++; p = p->prox; } } return ge;"
+   ]
+  },
+  {
+   "nivel": 3,
+   "num": 1,
+   "nome": "transposta_l",
+   "assinatura": "vertice* transposta_l(vertice* g)",
+   "enunciado": "Devolve um grafo NOVO com todas as arestas invertidas. g fica intacto.",
+   "referencia": "caderno, pag. 6 (Problema 3) / lista ex. 4",
+   "dicas": [
+    "Crie e inicialize gt, depois percorra g inteiro.",
+    "Para cada aresta i -> p->adj que voce encontrar em g, insira p->adj -> i\n     em gt. Repare que os papeis se invertem.",
+    "vertice* gt = alocar_l(); inicializar_l(gt); int i;\n     for (i=0;i<V;i++) { no* p = g[i].inicio;\n       while (p) { inserir_aresta_l(gt, p->adj, i); p = p->prox; } }\n     return gt;"
+   ]
+  },
+  {
+   "nivel": 3,
+   "num": 2,
+   "nome": "matriz_p_lista",
+   "assinatura": "vertice* matriz_p_lista(int m[V][V])",
+   "enunciado": "Converte um grafo em matriz para lista de adjacencia.",
+   "referencia": "caderno, pag. 8 / lista ex. 5",
+   "dicas": [
+    "Varra a matriz com dois fors procurando os 1.",
+    "Cada m[i][j] == 1 vira uma aresta i -> j na lista.",
+    "vertice* g = alocar_l(); inicializar_l(g); int i, j;\n     for (i=0;i<V;i++) for (j=0;j<V;j++)\n       if (m[i][j] == 1) inserir_aresta_l(g, i, j);\n     return g;"
+   ]
+  },
+  {
+   "nivel": 3,
+   "num": 3,
+   "nome": "subgrafo_lm",
+   "assinatura": "bool subgrafo_lm(vertice* g1, int m2[V][V])",
+   "enunciado": "TRUE se toda aresta de g1 (lista) tambem existe em m2 (matriz).",
+   "referencia": "caderno, pag. 5-6 (Problema 2) / lista ex. 8",
+   "dicas": [
+    "Percorra todas as arestas de g1 e pergunte se cada uma existe em m2.",
+    "Basta UMA aresta faltando para a resposta ser false; so devolva true\n     depois de olhar todas. Aqui aresta_existe_m ganha o dia.",
+    "int i; for (i=0;i<V;i++) { no* p = g1[i].inicio;\n       while (p) { if (!aresta_existe_m(m2, i, p->adj)) return false;\n                   p = p->prox; } }\n     return true;"
+   ]
+  },
+  {
+   "nivel": 3,
+   "num": 4,
+   "nome": "contar_lacos_l",
+   "assinatura": "int contar_lacos_l(vertice* g)",
+   "enunciado": "Conta quantos lacos (arestas i -> i) existem no grafo.",
+   "referencia": "lista ex. 1",
+   "dicas": [
+    "Laco e a aresta que sai de um vertice e volta nele mesmo.",
+    "Para cada i, basta perguntar se existe a aresta i -> i.",
+    "int i, cont = 0;\n     for (i=0;i<V;i++) if (aresta_existe_l(g, i, i)) cont++;\n     return cont;"
+   ]
+  },
+  {
+   "nivel": 3,
+   "num": 5,
+   "nome": "remover_lacos_l",
+   "assinatura": "void remover_lacos_l(vertice* g)",
+   "enunciado": "Remove todos os lacos, sem tocar nas outras arestas.",
+   "referencia": "lista ex. 2",
+   "dicas": [
+    "Mesma varredura do exercicio anterior, trocando contar por excluir.",
+    "excluir_aresta_l(g, i, i) ja cuida do free e do religamento da lista.",
+    "int i;\n     for (i=0;i<V;i++) if (aresta_existe_l(g,i,i)) excluir_aresta_l(g,i,i);"
+   ]
+  },
+  {
+   "nivel": 3,
+   "num": 6,
+   "nome": "destruir_arestas_l",
+   "assinatura": "void destruir_arestas_l(vertice* g)",
+   "enunciado": "Libera TODOS os nos e deixa o grafo vazio (inicio = NULL em todo vertice).",
+   "referencia": "lista ex. 3",
+   "dicas": [
+    "Percorra cada lista dando free em todos os nos.",
+    "ARMADILHA: depois do free(p) o campo p->prox nao vale mais nada. Guarde\n     o proximo numa variavel ANTES de liberar.",
+    "int i;\n     for (i=0;i<V;i++) { no* p = g[i].inicio;\n       while (p) { no* t = p->prox; free(p); p = t; }\n       g[i].inicio = NULL; }"
+   ]
+  },
+  {
+   "nivel": 3,
+   "num": 7,
+   "nome": "diferenca_l",
+   "assinatura": "vertice* diferenca_l(vertice* g1, vertice* g2)",
+   "enunciado": "Devolve um grafo novo com as arestas que estao em g1 mas nao em g2.",
+   "referencia": "lista ex. 9",
+   "dicas": [
+    "Percorra as arestas de g1 e teste cada uma contra g2.",
+    "So entra em g3 a aresta que existe em g1 e NAO existe em g2.",
+    "vertice* g3 = alocar_l(); inicializar_l(g3); int i;\n     for (i=0;i<V;i++) { no* p = g1[i].inicio;\n       while (p) { if (!aresta_existe_l(g2, i, p->adj))\n                     inserir_aresta_l(g3, i, p->adj);\n                   p = p->prox; } }\n     return g3;"
+   ]
+  },
+  {
+   "nivel": 3,
+   "num": 8,
+   "nome": "completo_l",
+   "assinatura": "bool completo_l(vertice* g)",
+   "enunciado": "TRUE se existe aresta entre todo par de vertices distintos.",
+   "referencia": "lista ex. 19",
+   "dicas": [
+    "Sao todos os pares (i, j) com i diferente de j.",
+    "Uma unica aresta faltando ja derruba tudo: return false na hora.",
+    "int i, j;\n     for (i=0;i<V;i++) for (j=0;j<V;j++)\n       if (i != j && !aresta_existe_l(g,i,j)) return false;\n     return true;"
+   ]
+  },
+  {
+   "nivel": 3,
+   "num": 9,
+   "nome": "complemento_l",
+   "assinatura": "vertice* complemento_l(vertice* g)",
+   "enunciado": "Devolve o grafo complementar: tem exatamente as arestas que faltam em g.\n  Lacos nao entram (nao sao par de vertices distintos).",
+   "referencia": "lista ex. 20",
+   "dicas": [
+    "E o exercicio anterior de cabeca para baixo.",
+    "Para cada par i != j, insira em gc justamente quando a aresta NAO existe\n     em g. O g original nao pode ser alterado.",
+    "vertice* gc = alocar_l(); inicializar_l(gc); int i, j;\n     for (i=0;i<V;i++) for (j=0;j<V;j++)\n       if (i != j && !aresta_existe_l(g,i,j)) inserir_aresta_l(gc,i,j);\n     return gc;"
+   ]
+  },
+  {
+   "nivel": 4,
+   "num": 1,
+   "nome": "zerar_flags",
+   "assinatura": "void zerar_flags(vertice* g)",
+   "enunciado": "Deixa todo vertice BRANCO (flag = 0) antes de comecar uma busca.",
+   "referencia": "caderno, pag. 6 (antes de chamar, zerar flags)",
+   "dicas": [
+    "Um for simples mexendo em um campo so.",
+    "ARMADILHA SERIA: o campo e flag, nao inicio. Zerar inicio apagaria o\n     grafo inteiro e a busca sairia vazia.",
+    "int i; for (i=0;i<V;i++) { g[i].flag = 0; }"
+   ]
+  },
+  {
+   "nivel": 4,
+   "num": 2,
+   "nome": "prof",
+   "assinatura": "void prof(vertice* g, int i)",
+   "enunciado": "Busca em profundidade a partir de i. Quem chama zera as flags antes.\n  Convencao: 0 = branco (nao descoberto), 1 = cinza (descoberto),\n  2 = preto (concluido).",
+   "referencia": "caderno, pag. 6 (parte 1/3)",
+   "dicas": [
+    "A estrutura e: pinta de cinza, visita os vizinhos brancos, pinta de preto.",
+    "So desca no vizinho que ainda estiver BRANCO -- e isso que impede a\n     recursao infinita quando o grafo tem ciclo.",
+    "g[i].flag = 1;\n     no* p = g[i].inicio;\n     while (p) { if (g[p->adj].flag == 0) prof(g, p->adj); p = p->prox; }\n     g[i].flag = 2;"
+   ]
+  },
+  {
+   "nivel": 4,
+   "num": 3,
+   "nome": "prof_caminho",
+   "assinatura": "void prof_caminho(vertice* g, int i, int j, bool* achou)",
+   "enunciado": "Marca *achou = TRUE se existe caminho de i ate j. Quem chama zera as\n  flags e poe *achou = FALSE antes.",
+   "referencia": "caderno, pag. 7 (verificar caminho de i ate j) / lista ex. 16",
+   "dicas": [
+    "E a busca em profundidade com uma parada antecipada.",
+    "Se i == j, marque *achou e volte na hora. Depois de cada chamada\n     recursiva, teste if (*achou) return; para nao continuar procurando.",
+    "if (i == j) { *achou = true; return; }\n     g[i].flag = 1;\n     no* p = g[i].inicio;\n     while (p) { if (g[p->adj].flag == 0) {\n                   prof_caminho(g, p->adj, j, achou);\n                   if (*achou) return; }\n                 p = p->prox; }\n     g[i].flag = 2;"
+   ]
+  },
+  {
+   "nivel": 4,
+   "num": 4,
+   "nome": "tem_ciclo_dir",
+   "assinatura": "bool tem_ciclo_dir(vertice* g)",
+   "enunciado": "TRUE se o grafo dirigido tem algum ciclo. Zere as flags voce mesmo e\n  cubra o grafo inteiro (o ciclo pode estar num pedaco separado).\n  Escreva uma funcao auxiliar recursiva no mesmo arquivo.",
+   "referencia": "caderno, pag. 7 (para detectar ciclos) / lista ex. 12",
+   "dicas": [
+    "O que denuncia um ciclo e chegar num vertice que ainda esta CINZA:\n     ele e um ancestral vivo na pilha da recursao.",
+    "ARMADILHA: vizinho PRETO nao e ciclo, e so um vertice ja terminado que\n     foi alcancado por outro caminho (pense no diamante 0->1, 0->2,\n     1->3, 2->3).",
+    "static bool aux(vertice* g, int i) {\n       g[i].flag = 1;\n       no* p = g[i].inicio;\n       while (p) { if (g[p->adj].flag == 1) return true;\n                   if (g[p->adj].flag == 0 && aux(g, p->adj)) return true;\n                   p = p->prox; }\n       g[i].flag = 2; return false; }\n     // no tem_ciclo_dir: zerar_flags e um for chamando aux nos brancos"
+   ]
+  },
+  {
+   "nivel": 4,
+   "num": 5,
+   "nome": "contar_tipo_x",
+   "assinatura": "void contar_tipo_x(vertice* g, int i, int x, int* cont)",
+   "enunciado": "Conta quantos vertices de tipo x da para alcancar a partir de i,\n  contando o proprio i se ele for do tipo x. Quem chama zera flags e cont.",
+   "referencia": "caderno, pag. 8 (contar salas do tipo x)",
+   "dicas": [
+    "E a busca em profundidade com um contador passado por ponteiro.",
+    "Faca o teste do tipo logo depois de pintar i de cinza, antes de descer.",
+    "g[i].flag = 1;\n     if (g[i].tipo == x) { *cont = *cont + 1; }\n     no* p = g[i].inicio;\n     while (p) { if (g[p->adj].flag == 0) contar_tipo_x(g, p->adj, x, cont);\n                 p = p->prox; }\n     g[i].flag = 2;"
+   ]
+  },
+  {
+   "nivel": 4,
+   "num": 6,
+   "nome": "contar_grupos",
+   "assinatura": "int contar_grupos(vertice* g)",
+   "enunciado": "Conta os grupos de vertices mutuamente alcancaveis (componentes) de um\n  grafo nao-dirigido.",
+   "referencia": "lista ex. 14",
+   "dicas": [
+    "Zere as flags uma unica vez, no comeco. Depois varra todos os vertices.",
+    "Cada vertice que voce encontrar ainda BRANCO comeca um grupo novo:\n     some 1 e dispare prof a partir dele para pintar o grupo inteiro.",
+    "int i, cont = 0; zerar_flags(g);\n     for (i=0;i<V;i++) if (g[i].flag == 0) { cont++; prof(g, i); }\n     return cont;"
+   ]
+  },
+  {
+   "nivel": 4,
+   "num": 7,
+   "nome": "maior_grupo_inicio",
+   "assinatura": "int maior_grupo_inicio(vertice* g)",
+   "enunciado": "Devolve um vertice qualquer do MAIOR grupo conectado. -1 se nao houver.\n  Escreva uma auxiliar recursiva que conta os vertices alcancaveis.",
+   "referencia": "caderno, pag. 8 (Ex 1) / lista ex. 15",
+   "dicas": [
+    "E o exercicio anterior guardando, alem da contagem, quem foi o maior.",
+    "A auxiliar e igual ao prof, so que somando 1 no contador a cada vertice\n     visitado. Compare cont com maior_quant a cada grupo terminado.",
+    "int maior_i = -1, maior_quant = 0, i; zerar_flags(g);\n     for (i=0;i<V;i++) { int cont = 0;\n       if (g[i].flag == 0) { conta_alcancaveis(g, i, &cont);\n         if (cont > maior_quant) { maior_quant = cont; maior_i = i; } } }\n     return maior_i;"
+   ]
+  },
+  {
+   "nivel": 4,
+   "num": 8,
+   "nome": "arvore_enraizada",
+   "assinatura": "bool arvore_enraizada(vertice* g)",
+   "enunciado": "TRUE se g e aciclico, conexo, dirigido e tem UM UNICO vertice fonte\n  (grau de entrada zero). Implemente exatamente essa definicao.",
+   "referencia": "lista ex. 6",
+   "dicas": [
+    "Sao tres perguntas independentes. Responda uma de cada vez e ja devolva\n     false na primeira que falhar.",
+    "1) conte os vertices com grau_entrada_l == 0: tem que dar exatamente 1;\n     2) tem_ciclo_dir tem que dar false;\n     3) uma prof saindo da raiz tem que deixar os V vertices nao-brancos.",
+    "int i, fontes = 0, raiz = -1, vis = 0;\n     for (i=0;i<V;i++) if (grau_entrada_l(g,i)==0) { fontes++; raiz = i; }\n     if (fontes != 1) return false;\n     if (tem_ciclo_dir(g)) return false;\n     zerar_flags(g); prof(g, raiz);\n     for (i=0;i<V;i++) if (g[i].flag != 0) vis++;\n     return vis == V;"
+   ]
+  },
+  {
+   "nivel": 5,
+   "num": 1,
+   "nome": "fila (3 funcoes)",
+   "assinatura": "void inicializar_fila(FILA*) / void entrar_fila(FILA*, int) / int sair_fila(FILA*)",
+   "enunciado": "A fila da busca em largura. Entra no fim, sai do comeco (FIFO).\n  sair_fila devolve -1 se a fila estiver vazia. Implemente as TRES.",
+   "referencia": "caderno, pag. 10 (1. criar uma fila F)",
+   "dicas": [
+    "A FILA tem dois ponteiros: inicio (por onde sai) e ultimo (por onde entra).",
+    "ARMADILHA 1: se a fila esta vazia, f->ultimo e NULL e f->ultimo->prox\n     estoura. Nesse caso o novo no vira o inicio E o ultimo.\n     ARMADILHA 2: nunca teste if (!valor) -- o vertice 0 e valido.\n     ARMADILHA 3: quando o ultimo elemento sai, zere f->ultimo tambem.",
+    "void inicializar_fila(FILA* f) { f->inicio = NULL; f->ultimo = NULL; }\n\n     void entrar_fila(FILA* f, int valor) {\n       no* novo = (no*) malloc(sizeof(no));\n       novo->adj = valor; novo->peso = 0; novo->id = 0; novo->prox = NULL;\n       if (f->ultimo == NULL) { f->inicio = novo; }\n       else { f->ultimo->prox = novo; }\n       f->ultimo = novo; }\n\n     int sair_fila(FILA* f) {\n       if (f->inicio == NULL) return -1;\n       no* p = f->inicio; int valor = p->adj;\n       f->inicio = p->prox;\n       if (f->inicio == NULL) f->ultimo = NULL;\n       free(p); return valor; }"
+   ]
+  },
+  {
+   "nivel": 5,
+   "num": 2,
+   "nome": "largura_l",
+   "assinatura": "void largura_l(vertice* g, int i)",
+   "enunciado": "Busca em largura a partir de i, em lista. A propria funcao zera as flags.\n  Ao ENFILEIRAR um vizinho ele fica cinza; ao SAIR da fila, preto.",
+   "referencia": "caderno, pag. 10 (Busca em Largura)",
+   "dicas": [
+    "Roteiro do caderno: zerar flags, criar e inicializar a fila, botar i\n     nela, marcar g[i].flag = 1, e rodar enquanto a fila tiver alguem.",
+    "ARMADILHA: ao descobrir um vizinho, quem fica cinza e g[p->adj].flag,\n     nao g[i].flag. Marcar cinza NA HORA de enfileirar e o que impede o\n     mesmo vertice de entrar duas vezes.",
+    "FILA F; zerar_flags(g); inicializar_fila(&F);\n     entrar_fila(&F, i); g[i].flag = 1;\n     while (F.inicio) {\n       i = sair_fila(&F);\n       no* p = g[i].inicio;\n       while (p) { if (g[p->adj].flag == 0) { g[p->adj].flag = 1;\n                                              entrar_fila(&F, p->adj); }\n                   p = p->prox; }\n       g[i].flag = 2; }"
+   ]
+  },
+  {
+   "nivel": 5,
+   "num": 3,
+   "nome": "largura_m",
+   "assinatura": "void largura_m(int m[V][V], int i, int flags[V])",
+   "enunciado": "A mesma busca em largura, mas em matriz. As marcas vao no vetor flags,\n  que a propria funcao zera antes de comecar.",
+   "referencia": "caderno, pag. 11 (em matriz)",
+   "dicas": [
+    "Estrutura identica a da lista, so muda como se acham os vizinhos.",
+    "Sem lista para percorrer: um for de j = 0 a V-1 testando\n     m[i][j] == 1 && flags[j] == 0.",
+    "int k; for (k=0;k<V;k++) flags[k] = 0;\n     FILA F; inicializar_fila(&F); entrar_fila(&F, i); flags[i] = 1;\n     while (F.inicio) { int j; i = sair_fila(&F);\n       for (j=0;j<V;j++) if (m[i][j]==1 && flags[j]==0) {\n         flags[j] = 1; entrar_fila(&F, j); }\n       flags[i] = 2; }"
+   ]
+  },
+  {
+   "nivel": 5,
+   "num": 4,
+   "nome": "tipo_x_mais_prox",
+   "assinatura": "int tipo_x_mais_prox(vertice* g, int i, int x)",
+   "enunciado": "Devolve o vertice de tipo x MAIS PROXIMO de i (menos arestas), ou -1.\n  Se o proprio i for do tipo x, a resposta e i.",
+   "referencia": "caderno, pag. 11 (Ex 1) / lista ex. 21 e 27",
+   "dicas": [
+    "Tem que ser busca em LARGURA: ela visita os vertices em ordem de\n     distancia, entao o primeiro que aparecer ja e o mais proximo.",
+    "Faca o teste do tipo logo depois de tirar o vertice da fila. Se bater,\n     esvazie a fila e devolva i na hora. Se a fila secar, devolva -1.",
+    "zerar_flags(g); FILA F; inicializar_fila(&F);\n     entrar_fila(&F, i); g[i].flag = 1;\n     while (F.inicio) { i = sair_fila(&F);\n       if (g[i].tipo == x) { while (F.inicio) sair_fila(&F); return i; }\n       no* p = g[i].inicio;\n       while (p) { if (g[p->adj].flag == 0) { g[p->adj].flag = 1;\n                                              entrar_fila(&F, p->adj); }\n                   p = p->prox; }\n       g[i].flag = 2; }\n     return -1;"
+   ]
+  },
+  {
+   "nivel": 5,
+   "num": 5,
+   "nome": "comprimento",
+   "assinatura": "int comprimento(vertice* g, int v1, int v2)",
+   "enunciado": "Numero de arestas do menor caminho de v1 ate v2. INFINITO se nao houver.\n  De v1 ate v1 o comprimento e 0.",
+   "referencia": "caderno, pag. 12 (Ex 2)",
+   "dicas": [
+    "Use o campo dist do vertice. dist[v1] = 0 e o resto comeca em INFINITO.",
+    "Ao descobrir um vizinho, g[p->adj].dist = g[i].dist + 1. Quando v2 sair\n     da fila, a distancia dele ja e definitiva: devolva.",
+    "int k; zerar_flags(g);\n     for (k=0;k<V;k++) g[k].dist = INFINITO;\n     g[v1].dist = 0;\n     FILA F; inicializar_fila(&F); entrar_fila(&F, v1); g[v1].flag = 1;\n     while (F.inicio) { int i = sair_fila(&F);\n       if (i == v2) { int d = g[i].dist;\n                      while (F.inicio) sair_fila(&F); return d; }\n       no* p = g[i].inicio;\n       while (p) { if (g[p->adj].flag == 0) {\n           g[p->adj].flag = 1; g[p->adj].dist = g[i].dist + 1;\n           entrar_fila(&F, p->adj); }\n         p = p->prox; }\n       g[i].flag = 2; }\n     return INFINITO;"
+   ]
+  },
+  {
+   "nivel": 5,
+   "num": 6,
+   "nome": "vertices_raio_n",
+   "assinatura": "no* vertices_raio_n(vertice* g, int i, int N)",
+   "enunciado": "Lista ligada com todos os vertices a no maximo N arestas de i, incluindo\n  o proprio i. A ordem da lista nao importa.",
+   "referencia": "caderno, pag. 12 (Ex 2) / lista ex. 24",
+   "dicas": [
+    "Busca em largura calculando dist, montando a lista resposta pelo caminho.",
+    "ARMADILHA: nao pare a busca ao ver o primeiro vizinho longe demais --\n     isso deixaria de fora os irmaos dele no mesmo nivel. So NAO ENFILEIRE\n     quem passaria de N.",
+    "no* resp = NULL; int k; zerar_flags(g);\n     for (k=0;k<V;k++) g[k].dist = 0;\n     FILA F; inicializar_fila(&F); entrar_fila(&F, i); g[i].flag = 1;\n     while (F.inicio) { i = sair_fila(&F);\n       no* p = g[i].inicio;\n       while (p) { if (g[p->adj].flag == 0 && g[i].dist + 1 <= N) {\n           g[p->adj].dist = g[i].dist + 1; g[p->adj].flag = 1;\n           entrar_fila(&F, p->adj); }\n         p = p->prox; }\n       g[i].flag = 2;\n       no* novo = (no*) malloc(sizeof(no));\n       novo->adj = i; novo->prox = resp; resp = novo; }\n     return resp;"
+   ]
+  },
+  {
+   "nivel": 5,
+   "num": 7,
+   "nome": "distancias",
+   "assinatura": "void distancias(vertice* g, int i, int dist[V])",
+   "enunciado": "Preenche dist[] com a distancia (em arestas) de i ate cada vertice.\n  Quem nao for alcancavel fica com INFINITO.",
+   "referencia": "lista ex. 23",
+   "dicas": [
+    "E a busca em largura sem parada antecipada: rode ate a fila secar.",
+    "Comece com dist[k] = INFINITO para todo k e dist[i] = 0. Ao descobrir\n     um vizinho, dist[p->adj] = dist[i] + 1.",
+    "int k; zerar_flags(g);\n     for (k=0;k<V;k++) dist[k] = INFINITO;\n     dist[i] = 0;\n     FILA F; inicializar_fila(&F); entrar_fila(&F, i); g[i].flag = 1;\n     while (F.inicio) { i = sair_fila(&F);\n       no* p = g[i].inicio;\n       while (p) { if (g[p->adj].flag == 0) { g[p->adj].flag = 1;\n           dist[p->adj] = dist[i] + 1; entrar_fila(&F, p->adj); }\n         p = p->prox; }\n       g[i].flag = 2; }"
+   ]
+  },
+  {
+   "nivel": 6,
+   "num": 1,
+   "nome": "custo",
+   "assinatura": "void custo(int m[V][V], int i, int custos[V])",
+   "enunciado": "Dijkstra em matriz de PESOS: m[i][j] == 0 quer dizer que nao ha aresta.\n  Preenche custos[] com o custo minimo de i ate cada vertice (INFINITO\n  para os inalcancaveis).",
+   "referencia": "caderno, pag. 13 (Algoritmo de Dijkstra)",
+   "dicas": [
+    "Comece com custos[i] = 0 e todo o resto INFINITO, com um vetor flags\n     marcando quem ja foi fechado.",
+    "Repita V vezes: escolha o vertice NAO fechado de menor custo, feche ele,\n     e para cada vizinho tente melhorar\n     custos[viz] = custos[atual] + m[atual][viz].",
+    "int flags[V], k, c, atual, menor;\n     for (k=0;k<V;k++) { custos[k] = INFINITO; flags[k] = 0; }\n     custos[i] = 0;\n     for (k=0;k<V;k++) {\n       atual = -1; menor = INFINITO;\n       for (c=0;c<V;c++) if (!flags[c] && custos[c] < menor)\n                           { menor = custos[c]; atual = c; }\n       if (atual == -1) return;\n       flags[atual] = 1;\n       for (c=0;c<V;c++)\n         if (m[atual][c] > 0 && !flags[c] &&\n             custos[atual] + m[atual][c] < custos[c])\n           custos[c] = custos[atual] + m[atual][c]; }"
+   ]
+  },
+  {
+   "nivel": 6,
+   "num": 2,
+   "nome": "achar_cor",
+   "assinatura": "int achar_cor(vertice* g, int i)",
+   "enunciado": "Devolve a MENOR cor (a partir de 1) que nenhum vizinho de i esta usando.\n  Cor 0 significa 'ainda sem cor' e nao bloqueia nada.",
+   "referencia": "caderno, pag. 14 (Coloracao)",
+   "dicas": [
+    "Use um vetorzinho tem_cor[] marcando as cores ocupadas pelos vizinhos.",
+    "Duas passadas: a primeira marca tem_cor[g[p->adj].cor] = true para cada\n     vizinho ja colorido; a segunda devolve o primeiro j livre a partir de 1.",
+    "bool tem_cor[V+2]; int j; no* p;\n     for (j=1;j<=V+1;j++) tem_cor[j] = false;\n     p = g[i].inicio;\n     while (p) { if (g[p->adj].cor > 0) tem_cor[g[p->adj].cor] = true;\n                 p = p->prox; }\n     for (j=1;j<=V+1;j++) if (!tem_cor[j]) return j;\n     return -1;"
+   ]
+  },
+  {
+   "nivel": 6,
+   "num": 3,
+   "nome": "colorir",
+   "assinatura": "void colorir(vertice* g, int i, int* k)",
+   "enunciado": "Colore o grafo em profundidade a partir de i, sem deixar dois vizinhos\n  com a mesma cor. *k guarda a maior cor usada. Quem chama zera as cores.",
+   "referencia": "caderno, pag. 14 (Metodo 1)",
+   "dicas": [
+    "E a busca em profundidade usando o campo cor no lugar da flag: cor == 0\n     faz o papel de 'branco'.",
+    "Pinte i com achar_cor(g, i), atualize *k se essa cor for maior, e so\n     entao desca nos vizinhos que ainda estiverem com cor == 0.",
+    "g[i].cor = achar_cor(g, i);\n     if (g[i].cor > *k) { *k = g[i].cor; }\n     no* p = g[i].inicio;\n     while (p) { if (g[p->adj].cor == 0) colorir(g, p->adj, k);\n                 p = p->prox; }"
+   ]
+  },
+  {
+   "nivel": 6,
+   "num": 4,
+   "nome": "filtrar_custo",
+   "assinatura": "vertice* filtrar_custo(vertice* g, int c)",
+   "enunciado": "Copia de g contendo apenas as arestas de custo MAIOR que c (peso == c\n  fica de fora). Copie tambem o peso para o no novo.",
+   "referencia": "lista ex. 7",
+   "dicas": [
+    "E a copia do grafo com um if a mais na hora de inserir.",
+    "Depois de inserir_aresta_l, o no novo esta na CABECA da lista, entao\n     resp[i].inicio->peso = p->peso copia o peso.",
+    "vertice* resp = alocar_l(); inicializar_l(resp); int i;\n     for (i=0;i<V;i++) { no* p = g[i].inicio;\n       while (p) { if (p->peso > c) { inserir_aresta_l(resp, i, p->adj);\n                                      resp[i].inicio->peso = p->peso; }\n                   p = p->prox; } }\n     return resp;"
+   ]
+  },
+  {
+   "nivel": 6,
+   "num": 5,
+   "nome": "caminho_bfs",
+   "assinatura": "no* caminho_bfs(vertice* g, int a, int b)",
+   "enunciado": "Lista ligada com o menor caminho de a ate b, do a ate o b nessa ordem.\n  NULL se nao existir caminho. De a ate a, a lista tem so o a.",
+   "referencia": "lista ex. 18 e 26",
+   "dicas": [
+    "Busca em largura guardando, para cada vertice descoberto, QUEM o\n     descobriu: um vetor pai[] comecando todo em -1.",
+    "No fim, saia de b subindo por pai[] ate chegar em -1. Inserindo cada\n     vertice na CABECA da lista, ela ja sai na ordem certa (a ... b).",
+    "int pai[V], k, i; no* resp = NULL; zerar_flags(g);\n     for (k=0;k<V;k++) pai[k] = -1;\n     FILA F; inicializar_fila(&F); entrar_fila(&F, a); g[a].flag = 1;\n     while (F.inicio) { i = sair_fila(&F);\n       if (i == b) break;\n       no* p = g[i].inicio;\n       while (p) { if (g[p->adj].flag == 0) { g[p->adj].flag = 1;\n           pai[p->adj] = i; entrar_fila(&F, p->adj); }\n         p = p->prox; }\n       g[i].flag = 2; }\n     while (F.inicio) sair_fila(&F);\n     if (a != b && pai[b] == -1) return NULL;\n     k = b;\n     while (k != -1) { no* novo = (no*) malloc(sizeof(no));\n       novo->adj = k; novo->prox = resp; resp = novo; k = pai[k]; }\n     return resp;"
+   ]
+  },
+  {
+   "nivel": 7,
+   "num": 1,
+   "nome": "suspeitos_spam",
+   "assinatura": "no* suspeitos_spam(vertice* g, int x)",
+   "enunciado": "Rede de emails dirigida. A aresta u -> v com id == x quer dizer que u\n  mandou a mensagem x para v. Devolve a lista dos usuarios que MANDARAM\n  x mas NUNCA receberam x (os suspeitos de ter comecado a propagacao).",
+   "referencia": "lista ex. 10",
+   "dicas": [
+    "Para cada usuario i sao duas perguntas: ele mandou x? ele recebeu x?",
+    "Mandou: alguma aresta da lista de i tem id == x.\n     Recebeu: alguma aresta de QUALQUER outro vertice chega em i com\n     id == x -- isso exige varrer o grafo todo, igual ao grau de entrada.",
+    "for (i=0;i<V;i++) { int enviou=0, recebeu=0, j; no* p;\n       for (p=g[i].inicio;p;p=p->prox) if (p->id==x) enviou=1;\n       for (j=0;j<V;j++) for (p=g[j].inicio;p;p=p->prox)\n         if (p->adj==i && p->id==x) recebeu=1;\n       if (enviou && !recebeu) { /* empilha i na resposta */ } }"
+   ]
+  },
+  {
+   "nivel": 7,
+   "num": 2,
+   "nome": "mais_paises",
+   "assinatura": "int mais_paises(vertice* g)",
+   "enunciado": "Cada vertice tem um campo pais. Devolve a unidade que liga para o maior\n  numero de paises DIFERENTES. Havendo empate, qualquer uma serve.",
+   "referencia": "lista ex. 11",
+   "dicas": [
+    "Nao e problema de busca: basta olhar a lista de cada vertice.",
+    "O cuidado e nao contar o mesmo pais duas vezes. Guarde os paises ja\n     vistos num vetorzinho e so conte o que ainda nao estiver la.",
+    "for (i=0;i<V;i++) { int vistos[V], nv=0, qtd=0, k; no* p;\n       for (p=g[i].inicio;p;p=p->prox) {\n         int pais = g[p->adj].pais, achou = 0;\n         for (k=0;k<nv;k++) if (vistos[k]==pais) achou=1;\n         if (!achou) { vistos[nv++]=pais; qtd++; } }\n       if (qtd > maior) { maior = qtd; melhor = i; } }\n     return melhor;"
+   ]
+  },
+  {
+   "nivel": 7,
+   "num": 3,
+   "nome": "tem_ciclo_nao_dir",
+   "assinatura": "bool tem_ciclo_nao_dir(vertice* g)",
+   "enunciado": "TRUE se o grafo NAO-dirigido tem algum ciclo. Cubra o grafo inteiro.\n  Escreva uma auxiliar recursiva que receba tambem o vertice pai.",
+   "referencia": "lista ex. 12",
+   "dicas": [
+    "Num grafo nao-dirigido toda aresta aparece nos dois sentidos, entao ao\n     visitar 1 voce enxerga o 0 outra vez. Isso nao pode contar como ciclo.",
+    "A auxiliar recebe de onde veio: aux(g, i, pai). Vizinho ja visitado so\n     denuncia ciclo se for DIFERENTE do pai. Laco (p->adj == i) tambem conta.",
+    "static bool aux(vertice* g, int i, int pai) {\n       g[i].flag = 1;\n       for (no* p = g[i].inicio; p; p = p->prox) {\n         if (p->adj == i) return true;\n         if (g[p->adj].flag == 0) { if (aux(g, p->adj, i)) return true; }\n         else if (p->adj != pai) return true; }\n       g[i].flag = 2; return false; }\n     // no principal: zerar_flags e um for chamando aux(g, i, -1)"
+   ]
+  },
+  {
+   "nivel": 7,
+   "num": 4,
+   "nome": "remover_aresta_ciclo",
+   "assinatura": "bool remover_aresta_ciclo(vertice* g)",
+   "enunciado": "Acha UMA aresta de volta (a que fecha um ciclo) num grafo dirigido,\n  remove ela e devolve TRUE. FALSE se nao havia ciclo nenhum.",
+   "referencia": "lista ex. 13",
+   "dicas": [
+    "E a deteccao de ciclo do nivel 4, so que guardando qual foi a aresta.",
+    "Quando a busca acha um vizinho CINZA, a aresta i -> p->adj e a de volta.\n     Guarde os dois vertices em variaveis e chame excluir_aresta_l DEPOIS\n     que a recursao terminar: mexer na lista no meio do while quebra o p.",
+    "static int u = -1, v = -1;   // guardam a aresta encontrada\n     // na auxiliar:\n     //   if (g[p->adj].flag == 1) { u = i; v = p->adj; return true; }\n     // no principal, depois de achar:\n     //   excluir_aresta_l(g, u, v); return true;"
+   ]
+  },
+  {
+   "nivel": 7,
+   "num": 5,
+   "nome": "maior_grupo_lista",
+   "assinatura": "no* maior_grupo_lista(vertice* g)",
+   "enunciado": "Devolve uma lista ligada com TODOS os vertices do maior grupo conectado.\n  A ordem da lista nao importa. Havendo empate, qualquer grupo serve.",
+   "referencia": "lista ex. 15",
+   "dicas": [
+    "E o maior_grupo_inicio do nivel 4, so que juntando os vertices numa\n     lista em vez de apenas conta-los.",
+    "A auxiliar recebe um no** para ir empilhando cada vertice visitado, e um\n     contador para saber o tamanho. Guarde a maior lista vista ate agora.",
+    "static void junta(vertice* g, int i, no** lista, int* cont) {\n       g[i].flag = 1;\n       no* novo = (no*) malloc(sizeof(no));\n       novo->adj = i; novo->prox = *lista; *lista = novo;\n       *cont = *cont + 1;\n       for (no* p = g[i].inicio; p; p = p->prox)\n         if (g[p->adj].flag == 0) junta(g, p->adj, lista, cont);\n       g[i].flag = 2; }"
+   ]
+  },
+  {
+   "nivel": 7,
+   "num": 6,
+   "nome": "vazias_mais_proximas",
+   "assinatura": "no* vazias_mais_proximas(vertice* g, int i)",
+   "enunciado": "O campo tipo guarda a OCUPACAO da sala; tipo == 0 quer dizer sala vazia.\n  Devolve a lista de TODAS as salas vazias que empatam em menor distancia\n  a partir de i. Se a propria sala i estiver vazia, a resposta e so ela.",
+   "referencia": "lista ex. 22",
+   "dicas": [
+    "Busca em largura guardando a distancia de cada sala.",
+    "Nao pare na primeira sala vazia: guarde a distancia dela e continue\n     coletando enquanto os vertices que saem da fila tiverem essa mesma\n     distancia. Quando sair um mais distante, pode parar.",
+    "int achado = -1;\n     // dentro do while, logo depois de tirar u da fila:\n     if (achado >= 0 && g[u].dist > achado) break;\n     if (g[u].tipo == 0) { achado = g[u].dist; /* empilha u */ }"
+   ]
+  },
+  {
+   "nivel": 7,
+   "num": 7,
+   "nome": "relacionados_k",
+   "assinatura": "no* relacionados_k(vertice* g, int i, int k)",
+   "enunciado": "Grafo dirigido de emails; o peso da aresta conta quantas mensagens foram\n  enviadas naquele sentido. Devolve a lista dos usuarios j ligados a i\n  (num sentido ou no outro) cuja soma dos dois sentidos seja >= k.",
+   "referencia": "lista ex. 25",
+   "dicas": [
+    "Para cada j diferente de i, some o peso de i -> j com o peso de j -> i.",
+    "Cuidado para nao colocar o mesmo j duas vezes na resposta: varra os j de\n     0 a V-1 e decida uma unica vez por j.",
+    "for (j=0;j<V;j++) { int total=0, ligado=0; no* p;\n       if (j == i) continue;\n       for (p=g[i].inicio;p;p=p->prox) if (p->adj==j) { total+=p->peso; ligado=1; }\n       for (p=g[j].inicio;p;p=p->prox) if (p->adj==i) { total+=p->peso; ligado=1; }\n       if (ligado && total >= k) { /* empilha j */ } }"
+   ]
+  },
+  {
+   "nivel": 7,
+   "num": 8,
+   "nome": "rota_companhia",
+   "assinatura": "no* rota_companhia(vertice* g, int a, int b, int c)",
+   "enunciado": "Malha aerea: cada aresta tem uma companhia no campo cia. Devolve a lista\n  do trajeto com MENOS conexoes de a ate b usando so voos da companhia c.\n  NULL se nao der para chegar.",
+   "referencia": "lista ex. 26",
+   "dicas": [
+    "E o caminho_bfs do nivel 6 com um filtro a mais.",
+    "Na hora de olhar os vizinhos, so entra na fila quem estiver do outro\n     lado de uma aresta com p->cia == c. O resto da busca e igual.",
+    "// unica mudanca em relacao ao caminho_bfs:\n     if (p->cia == c && g[p->adj].flag == 0) {\n       g[p->adj].flag = 1; pai[p->adj] = i; entrar_fila(&F, p->adj); }"
+   ]
+  },
+  {
+   "nivel": 7,
+   "num": 9,
+   "nome": "tipo_x_evitando",
+   "assinatura": "int tipo_x_evitando(vertice* g, int i, int x, int n)",
+   "enunciado": "Igual ao tipo_x_mais_prox, mas o vertice n esta interditado: nao pode ser\n  atravessado nem ser a resposta. Devolve -1 se nao houver alternativa.",
+   "referencia": "lista ex. 28",
+   "dicas": [
+    "E o exercicio 5.4 com um vertice proibido.",
+    "Nunca enfileire o vertice n. E, se a propria origem i for o vertice\n     interditado, a resposta ja e -1 antes mesmo de comecar a busca.",
+    "if (i == n) return -1;\n     // dentro do while, ao olhar os vizinhos:\n     if (p->adj != n && g[p->adj].flag == 0) {\n       g[p->adj].flag = 1; entrar_fila(&F, p->adj); }"
+   ]
+  }
+ ],
+ "campus": {
+  "locais": [
+   {
+    "id": 0,
+    "nome": "Portaria",
+    "tipo": 1,
+    "rotulo": "passagem"
+   },
+   {
+    "id": 1,
+    "nome": "Bloco A1",
+    "tipo": 1,
+    "rotulo": "passagem"
+   },
+   {
+    "id": 2,
+    "nome": "Bandejao",
+    "tipo": 2,
+    "rotulo": "comida"
+   },
+   {
+    "id": 3,
+    "nome": "Biblioteca",
+    "tipo": 3,
+    "rotulo": "estudo"
+   },
+   {
+    "id": 4,
+    "nome": "Bloco A2",
+    "tipo": 1,
+    "rotulo": "passagem"
+   },
+   {
+    "id": 5,
+    "nome": "Lab Redes",
+    "tipo": 4,
+    "rotulo": "laboratorio"
+   },
+   {
+    "id": 6,
+    "nome": "Cantina",
+    "tipo": 2,
+    "rotulo": "comida"
+   },
+   {
+    "id": 7,
+    "nome": "Auditorio",
+    "tipo": 5,
+    "rotulo": "evento"
+   }
+  ],
+  "trechos": [
+   {
+    "de": 0,
+    "para": 1,
+    "minutos": 3
+   },
+   {
+    "de": 0,
+    "para": 4,
+    "minutos": 2
+   },
+   {
+    "de": 1,
+    "para": 2,
+    "minutos": 5
+   },
+   {
+    "de": 1,
+    "para": 7,
+    "minutos": 8
+   },
+   {
+    "de": 2,
+    "para": 3,
+    "minutos": 1
+   },
+   {
+    "de": 2,
+    "para": 6,
+    "minutos": 2
+   },
+   {
+    "de": 3,
+    "para": 4,
+    "minutos": 4
+   },
+   {
+    "de": 4,
+    "para": 5,
+    "minutos": 6
+   },
+   {
+    "de": 5,
+    "para": 7,
+    "minutos": 1
+   }
+  ],
+  "menu": [
+   {
+    "rotulo": "Mapa do campus",
+    "nivel": 2,
+    "num": 6,
+    "funcao": "grau_saida_l"
+   },
+   {
+    "rotulo": "Existe caminho entre dois locais?",
+    "nivel": 4,
+    "num": 3,
+    "funcao": "prof_caminho"
+   },
+   {
+    "rotulo": "Aonde da para chegar a partir daqui",
+    "nivel": 4,
+    "num": 2,
+    "funcao": "prof"
+   },
+   {
+    "rotulo": "Comida mais proxima",
+    "nivel": 5,
+    "num": 4,
+    "funcao": "tipo_x_mais_prox"
+   },
+   {
+    "rotulo": "Rota com menos trechos",
+    "nivel": 6,
+    "num": 5,
+    "funcao": "caminho_bfs"
+   },
+   {
+    "rotulo": "Rota mais rapida (em minutos)",
+    "nivel": 6,
+    "num": 1,
+    "funcao": "custo"
+   },
+   {
+    "rotulo": "Quem esta a ate N trechos daqui",
+    "nivel": 5,
+    "num": 6,
+    "funcao": "vertices_raio_n"
+   },
+   {
+    "rotulo": "Simular interdicao de um local",
+    "nivel": 4,
+    "num": 6,
+    "funcao": "contar_grupos"
+   },
+   {
+    "rotulo": "Mapa invertido (quem chega em voce)",
+    "nivel": 3,
+    "num": 1,
+    "funcao": "transposta_l"
+   },
+   {
+    "rotulo": "Grade de horarios sem conflito",
+    "nivel": 6,
+    "num": 3,
+    "funcao": "colorir"
+   },
+   {
+    "rotulo": "Comida mais proxima evitando um local",
+    "nivel": 7,
+    "num": 9,
+    "funcao": "tipo_x_evitando"
+   },
+   {
+    "rotulo": "O campus tem algum circuito fechado?",
+    "nivel": 7,
+    "num": 3,
+    "funcao": "tem_ciclo_nao_dir"
+   }
+  ]
+ }
+}

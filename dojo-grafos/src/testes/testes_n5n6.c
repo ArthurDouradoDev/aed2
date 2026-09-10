@@ -105,8 +105,12 @@ void t5_4(void) {
             "  Grafo: 0->1, 1->2, 2->3 (corredor longo) e 0->4 (vizinho direto).\n"
             "  Postos (tipo 9) estao no 3 e no 4. O mais PROXIMO do 0 e o 4,\n"
             "  a 1 aresta. So a busca em LARGURA garante isso.");
-    inserir_aresta_l(g, 0, 1); inserir_aresta_l(g, 1, 2); inserir_aresta_l(g, 2, 3);
+    /* A ordem importa: como inserir_aresta_l insere na CABECA, o vizinho
+       inserido por ultimo e o primeiro visitado. Inserindo 0->4 antes de
+       0->1, a lista do vertice 0 fica 1 -> 4, e uma busca em profundidade
+       desce o corredor longo e devolve o 3. So a largura devolve o 4. */
     inserir_aresta_l(g, 0, 4);
+    inserir_aresta_l(g, 0, 1); inserir_aresta_l(g, 1, 2); inserir_aresta_l(g, 2, 3);
     g[3].tipo = 9;
     g[4].tipo = 9;
     ESPERA_INT("tipo_x_mais_prox(g, 0, 9)", tipo_x_mais_prox(g, 0, 9), 4);

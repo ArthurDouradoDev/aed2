@@ -95,7 +95,7 @@ Exercicio CATALOGO[] = {
  "Aloca o vetor com os V vertices do grafo e devolve o ponteiro.",
  "caderno, pag. 4 (vertice* g = malloc...)", t2_1,
  {"Sao V structs vertice, uma para cada posicao do vetor.",
-  "ARMADILHA: sizeof(vertice*) e o tamanho de um PONTEIRO (8 bytes). Voce\n     quer sizeof(vertice), o tamanho da STRUCT inteira.",
+  "ARMADILHA: sizeof(vertice*) e o tamanho de um PONTEIRO (so o endereco). Voce\n     quer sizeof(vertice), o tamanho da STRUCT inteira.",
   "vertice* g = (vertice*) malloc(V * sizeof(vertice)); return g;"}},
 
 {2, 2, "inicializar_l", "void inicializar_l(vertice* g)",

@@ -1,0 +1,14 @@
+{
+  "name": "Dojo de Grafos",
+  "short_name": "Dojo Grafos",
+  "description": "Treino das implementacoes de grafos em C, direto no navegador.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1319",
+  "theme_color": "#0f1319",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "./icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

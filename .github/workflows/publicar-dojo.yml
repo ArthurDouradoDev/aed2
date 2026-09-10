@@ -1,0 +1,67 @@
+# Publica o Dojo de Grafos no GitHub Pages.
+#
+# O catalogo, os esqueletos e o material sao gerados a partir do proprio C
+# antes de publicar, entao o site nunca fica dessincronizado do repositorio.
+name: publicar o dojo
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'dojo-grafos/**'
+      - 'parte-1.md'
+      - 'parte-2.md'
+      - 'estudo.md'
+      - '.github/workflows/publicar-dojo.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: gerar os dados a partir do C
+        working-directory: dojo-grafos
+        run: python3 tools/gerar_web_dados.py
+
+      - name: conferir os 51 exercicios contra o gabarito
+        working-directory: dojo-grafos
+        run: make conferir
+
+      - name: rodar o interpretador do navegador contra o gabarito
+        working-directory: dojo-grafos
+        run: node web/teste/suite.js
+
+      - name: provar que o navegador da o mesmo veredito do gcc
+        working-directory: dojo-grafos
+        run: node web/teste/diferencial.js
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dojo-grafos/web
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

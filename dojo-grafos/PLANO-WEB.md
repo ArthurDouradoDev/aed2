@@ -1,393 +1,272 @@
-# Plano: Dojo de Grafos na web
+# Dojo de Grafos na web: plano e o que foi construído
 
-Documento de planejamento para transformar o Dojo de Grafos (hoje um programa
-em C rodando no terminal) em um site estático hospedado no GitHub Pages, sem
-servidor, acessível de qualquer lugar.
+Este documento nasceu como plano de migração do Dojo de Grafos (um programa
+em C de terminal) para um site estático hospedável no GitHub Pages. A
+implementação está feita, e o documento foi atualizado para registrar o que
+saiu diferente do plano original e por quê.
 
-Status: proposta. Nada implementado ainda.
+**Estado: implementado.** Ver a seção "O Dojo no navegador" do `README.md`
+para o manual de uso.
 
 ---
 
-## 1. O que precisa continuar valendo
+## 1. O que precisava continuar valendo
 
-O Dojo atual não é um caderno de exercícios com respostas para conferir. Ele é
-um sistema real cujas funcionalidades rodam em cima do código do aluno. Três
-propriedades sustentam isso, e nenhuma pode ser perdida na versão web:
+O Dojo não é um caderno de exercícios com respostas para conferir. Ele é um
+sistema real cujas funcionalidades rodam em cima do código do aluno. Três
+propriedades sustentam isso, e nenhuma podia ser perdida:
 
 1. **É C de verdade.** Os testes pegam `malloc(sizeof(no*))` medindo os bytes
-   pedidos, pegam `ant == NULL` na exclusão do primeiro nó da lista, pegam
+   pedidos, pegam `ant == NULL` na exclusão do primeiro nó, pegam
    `g[i].flag` no lugar de `g[p->adj].flag`. Nada disso existe se o exercício
-   virar JavaScript. Reescrever em outra linguagem seria como treinar natação
-   na areia: os movimentos são parecidos, mas o que derruba o aluno na prova
-   (ponteiro, `sizeof`, memória) simplesmente não aparece.
+   virar JavaScript. Reescrever em outra linguagem seria treinar natação na
+   areia: os movimentos são parecidos, mas o que derruba na prova (ponteiro,
+   `sizeof`, memória) simplesmente não aparece.
 2. **Dependência real entre níveis.** Os testes do nível 3 montam grafos
-   chamando o `inserir_aresta_l` que o aluno escreveu no nível 2. O campus é
-   montado com `alocar_l` + `inicializar_l` + `inserir_aresta_l` do aluno.
+   chamando o `inserir_aresta_l` do nível 2. O campus é montado com
+   `alocar_l` + `inicializar_l` + `inserir_aresta_l` do aluno.
 3. **Isolamento contra código que quebra.** Recursão infinita e acesso
    inválido de memória precisam virar "quebrou", não a página travada.
 
-A versão web precisa das três. E ganha uma quarta: **ver o próprio algoritmo
-rodando**, que é justamente a parte que o terminal não dá.
+As três estão de pé. E apareceu uma quarta, que o terminal nunca deu:
+**ver o próprio algoritmo rodando**.
 
 ---
 
-## 2. A decisão central: compilar C dentro do navegador
+## 2. A decisão central, e por que ela mudou
 
 GitHub Pages serve arquivos estáticos e nada mais. Não existe backend para
-chamar `gcc`. Só sobram três caminhos, e a escolha define o projeto inteiro.
+chamar `gcc`. O plano original listava três caminhos e recomendava o A:
 
-| caminho | o que custa | o que se perde |
-|---|---|---|
-| **A. Clang compilado para WebAssembly, rodando no navegador** | download inicial pesado (na casa das dezenas de MB, cacheado depois) | nada de essencial |
-| **B. Interpretador C pequeno em WASM** (estilo chibicc/picoc portado) | download leve (~1 MB), mas suporte parcial de C e diagnósticos piores | precisão do compilador, mensagens de erro boas, confiança |
-| **C. Compilar em um serviço externo** (Cloudflare Worker gratuito) | sai do "só GitHub Pages", precisa de conta e deploy separado, latência de rede, e não funciona offline | autonomia do projeto |
+| caminho | avaliação original |
+|---|---|
+| **A. Clang compilado para WebAssembly** | recomendado; download de dezenas de MB, cacheado |
+| **B. Interpretador de C no próprio site** | descartado por "suporte parcial de C e diagnósticos piores" |
+| **C. Compilar num serviço externo** | plano B; sai do "só GitHub Pages" |
 
-**Recomendação: caminho A**, com o caminho C guardado como plano B caso o
-spike da Fase 0 mostre que o peso é inviável.
+**O que foi construído é o caminho B, e a avaliação original dele estava
+errada em dois pontos.**
 
-O raciocínio: o download grande acontece uma vez. Depois disso o compilador
-mora no cache do navegador e o site abre offline. É o mesmo trade que uma
-instalação de programa, só que sem instalar nada. E é o único caminho que
-mantém as três propriedades da seção 1 intactas.
+O que mudou a conta:
 
-### 2.1 Como funciona na prática
+- **O subconjunto de C é pequeno e conhecido.** Não é preciso suportar C
+  inteiro, só o que a matéria usa: structs, typedef, ponteiros, vetores de
+  uma e duas dimensões, funções (inclusive `static` e recursivas), todos os
+  comandos de controle e o conjunto completo de operadores inteiros. Isso
+  cabe em um lexer, um pré-processador, um parser e um interpretador, todos
+  em JavaScript puro.
+- **Os diagnósticos ficaram melhores, não piores.** Este foi o ponto onde a
+  previsão errou mais feio. Controlando o interpretador, dá para manter uma
+  **sombra de memória byte a byte** e responder com a causa em vez de um
+  segfault mudo. O `clang` em WASM entregaria o mesmo silêncio do gcc.
 
-```
-┌─ navegador ────────────────────────────────────────────────┐
-│                                                            │
-│  aba principal (UI)                                        │
-│    editor de código, mapa do campus, painel de progresso    │
-│         │  postMessage                                     │
-│         ▼                                                  │
-│  Worker "compilador"                                       │
-│    clang.wasm  : n1_matriz.c  ->  n1_matriz.o              │
-│    wasm-ld     : *.o + libdojo.a  ->  dojo.wasm            │
-│         │                                                  │
-│         ▼                                                  │
-│  Worker "execução"  (um worker novo por teste)             │
-│    instancia dojo.wasm, chama dojo_roda(indice)            │
-│    trap de memória  -> "quebrou"                           │
-│    passou do tempo  -> worker.terminate() -> "quebrou"     │
-└────────────────────────────────────────────────────────────┘
-```
+E o custo desapareceu: o site inteiro tem algumas centenas de KB, abre
+instantâneo, roda no celular e funciona offline. Não há download de compilador,
+não há build, não há dependência externa. É HTML, CSS e módulos ES.
 
-O `libdojo.a` é a parte que **não** muda: núcleo, catálogo, os 51 testes e os
-utilitários de diagnóstico, já compilados para WASM na CI e versionados no
-site. O navegador só compila os 7 arquivos do aluno, que são pequenos. Isso
-transforma cada `make n3` em algo na casa de um a dois segundos, não trinta.
-
-### 2.2 Isolamento: melhor do que o `fork` de hoje
-
-Hoje o Dojo roda cada teste num subprocesso via `system()` e lê o código de
-saída. Na web isso fica **mais** limpo, não menos:
-
-- **Acesso inválido de memória** vira um trap do WASM, que chega ao JavaScript
-  como uma exceção normal. Nada de sinal, nada de `setjmp`.
-- **Recursão infinita** estoura a pilha do WASM, que também é trap.
-- **Laço infinito** não é trap, mas o worker é descartável: `terminate()` depois
-  de N segundos e pronto. Isso funciona sem `SharedArrayBuffer`, o que importa
-  porque o GitHub Pages não manda os cabeçalhos COOP/COEP necessários para SAB.
-- **Instância nova por teste** garante que memória suja de um exercício não
-  contamina o seguinte, exatamente como o subprocesso faz hoje.
-
-Um ponto honesto: no WASM o endereço 0 é memória válida, então
-`p->adj` com `p == NULL` pode **não** dar trap, ao contrário do nativo. Mitigação
-planejada: fazer o `dojo_malloc` (que já existe e já é interceptado via
-`-Dmalloc=dojo_malloc`) reservar os primeiros KB da heap como zona proibida
-preenchida com um padrão sentinela, e o harness conferir o padrão depois de
-cada teste. Não é tão bom quanto uma page fault, mas pega a maioria dos casos e
-dá uma mensagem melhor do que um segfault genérico ("você desreferenciou NULL
-em algum ponto entre X e Y").
+O preço pago é real e vale declarar: **o interpretador é uma reimplementação,
+e reimplementação pode divergir do compilador de verdade.** A resposta a esse
+risco é a seção 6.
 
 ---
 
-## 3. Fonte única de verdade
+## 3. Como funciona
+
+```
+o aluno digita  ->  lexer  ->  pré-processador  ->  parser  ->  árvore
+                                                                  |
+                                          uma memória nova por teste
+                                                                  v
+   os 51 testes  ->  chamam as funções do aluno  ->  interpretador
+                                                                  |
+                     sombra de memória diz o que aconteceu  <-----+
+```
+
+**Memória de verdade.** Um `ArrayBuffer` faz as vezes de heap e pilha.
+Ponteiros são endereços reais dentro dele; `sizeof(no)` são 20 bytes,
+`sizeof(no*)` são 4. Um vetor sombra guarda, byte a byte, se aquele endereço
+está alocado, se já foi escrito, se veio da pilha ou se passou por `free`.
+
+**Isolamento.** Cada teste recebe uma memória nova, exatamente como o
+subprocesso do dojo de terminal. Lixo que um exercício deixou nunca alcança o
+seguinte. Laço infinito morre num limite de passos (meio segundo); recursão
+sem parada morre num limite de profundidade.
+
+**Uma folga proposital.** Depois de cada bloco do `malloc` ficam 64 bytes de
+folga. Ela existe para o interpretador se comportar como o C nativo, onde
+escrever além do bloco não explode na hora: o programa segue e o teste
+consegue dar a mensagem boa ("seu malloc pediu 4 bytes, mas `sizeof(no)` é
+20"). A diferença é que a invasão fica registrada e vira aviso, então nunca
+passa despercebida.
+
+---
+
+## 4. Fonte única de verdade
 
 O maior risco de longo prazo não é técnico, é de manutenção: acabar com os 51
-exercícios descritos em dois lugares (o `catalogo.c` e um JSON do site) que
-divergem em três semanas.
+exercícios descritos em dois lugares que divergem em três semanas.
 
-**Regra do projeto: o C é a fonte de verdade. O site deriva dele, nunca o
-contrário.**
+**O C é a fonte de verdade. O site deriva dele.** Na prática:
 
-Implementação:
+- `main.c` ganhou `--dump-json`, que despeja `NIVEIS[]`, `CATALOGO[]` (com os
+  enunciados e as três dicas) e o mapa do campus;
+- `campus.c` ganhou `campus_dump_json()`, que despeja os locais, as ruas com
+  os minutos e a tabela de destravamento das 12 funcionalidades;
+- `tools/gerar_web_dados.py` roda o binário, copia o `include/grafo.h` de
+  verdade, gera os esqueletos com o mesmo `tools/gerar_stubs.py` do
+  `make novociclo` e copia o material de estudo;
+- tudo isso cai em `web/dados/`, que é **gerado, nunca editado à mão**, e é
+  regerado no deploy.
 
-1. Adicionar ao `main.c` um modo `--dump-json` que imprime `NIVEIS[]` e
-   `CATALOGO[]` (nível, número, nome, assinatura, enunciado, referência, as 3
-   dicas) como JSON.
-2. A CI roda o binário nativo com esse modo e gera `web/public/catalogo.json`.
-3. A CI também roda `tools/gerar_stubs.py` para gerar os esqueletos iniciais dos
-   7 arquivos do aluno, que o site usa como estado inicial do editor.
-4. A CI compila `src/core/*.c` + `src/testes/*.c` para `libdojo.a` (WASM).
+Exercício novo, dica corrigida ou rua nova no campus aparece no site no
+próximo deploy, sem tocar em nada do front.
 
-Consequência boa: qualquer exercício novo, dica nova ou correção de enunciado
-feita no C aparece no site no próximo deploy, sem tocar em nada do front. O
-site e o dojo local nunca podem discordar porque são o mesmo código.
-
-O `campus.c` e o `main.c` atuais são interface de terminal e **não** entram no
-`libdojo.a`. A lógica deles (quais exercícios destravam quais funcionalidades,
-quais são os trechos e tipos do campus) migra para dados: um
-`web/public/campus.json` gerado a partir das mesmas tabelas, para não duplicar
-o mapa.
+Os 51 testes são a única coisa que existe duas vezes: em `src/testes/*.c` e
+portados em `web/js/dojo/testes.js`. Interpretar também os testes teria
+exigido um pré-processador completo com macros variádicas e `va_list`, o que
+dobrava a superfície de risco. A resposta a essa duplicação é, de novo, a
+seção 6: o teste diferencial roda os dois lados e exige o mesmo veredito.
 
 ---
 
-## 4. A camada lúdica: o Campus EACH que se acende
+## 5. A camada lúdica: o campus que se acende
 
-Aqui está a parte que o terminal nunca vai dar, e é o motivo mais forte para
-fazer a versão web.
+O Campus EACH virou mapa SVG com os oito locais em posições fixas (um mapa
+que muda de lugar a cada desenho nunca vira memória espacial) e desenho
+planar, sem rua cruzando rua.
 
-### 4.1 A metáfora
+O desenho é uma **leitura literal da `struct vertice`**: a `flag` vira a cor
+do círculo (branco, cinza, preto), a `dist` vira etiqueta, a `cor` vira
+preenchimento, o `tipo` vira ícone. Nada de mágica: o aluno consegue apontar
+qual campo produziu qual pixel.
 
-O campus começa **apagado**. Um mapa noturno com oito prédios escuros, sem
-caminhos desenhados entre eles, e um painel lateral de doze funcionalidades
-todas trancadas. À medida que os exercícios passam, o campus literalmente
-ganha vida:
+A progressão é a mesma do `make app`, agora visível:
 
-- **Nível 1 e 2 (estruturas):** os prédios aparecem, e depois as ruas entre
-  eles são desenhadas. É a planta baixa sendo construída. Antes do nível 2
-  fechar não existe mapa nenhum, porque é o `inserir_aresta_l` do aluno que
-  monta o grafo (isso já é verdade hoje, só que invisível).
-- **Nível 3 (transformações):** aparece o botão de inverter o mapa, o
-  complemento, o subgrafo. Cada transformação anima os arcos girando ou
-  aparecendo.
-- **Nível 4 (profundidade):** os prédios ganham as cores branco / cinza / preto
-  e a busca é animada passo a passo. A simulação de interdição fecha um prédio
-  e o campus se parte em pedaços coloridos na tela.
-- **Nível 5 (largura):** a onda concêntrica. A BFS saindo da Portaria pinta
-  anéis de distância 1, 2, 3. É aqui que a diferença entre profundidade e
-  largura para de ser abstrata.
-- **Nível 6 (ponderados):** as ruas ganham espessura proporcional aos minutos,
-  e o Dijkstra acende a rota mais rápida em verde. A coloração vira uma grade
-  de horários colorida de verdade.
-- **Nível 7 (desafios):** as funcionalidades finais, incluindo rotas evitando
-  um local interditado.
+- antes do nível 2, o mapa está **apagado** e o site diz por quê: é o
+  `inserir_aresta_l` do aluno que constrói o grafo;
+- cada uma das 12 funcionalidades acende quando o exercício de que ela
+  depende passa;
+- a barra de progresso do painel não é "23/51", é um campus saindo do escuro.
 
-A barra de progresso não é "23/51". É um mapa que sai do escuro. A diferença é
-a mesma entre ver o saldo da poupança e ver a casa sendo construída.
-
-### 4.2 Como o mapa é desenhado
-
-SVG, não canvas. São 8 vértices e no máximo algumas dezenas de arestas, então
-performance não é problema, e SVG dá de graça: transições CSS, elementos
-clicáveis, acessibilidade e um DOM inspecionável quando algo estiver errado.
-
-Posições dos 8 locais fixas e desenhadas à mão (não force-directed): um mapa de
-campus precisa ser **o mesmo** toda vez para o aluno criar memória espacial. Se
-o layout dança a cada render, ele nunca aprende que o Bandejão fica ao lado da
-Biblioteca.
-
-Os estados visuais de um vértice mapeiam direto nos campos da struct que o aluno
-já conhece: `flag` vira cor da borda (branco / cinza / preto), `dist` vira um
-número na etiqueta, `cor` vira preenchimento, `tipo` vira ícone. Ou seja, o
-desenho é uma leitura literal da `struct vertice`. Nada de mágica: o aluno
-consegue apontar qual campo produziu qual pixel.
-
-### 4.3 Ver o próprio algoritmo rodando (o diferencial)
-
-Isso é a Fase 4 e é opcional, mas é a maior vantagem do formato web.
-
-A ideia: depois de um teste passar, o aluno pode apertar "assistir" e ver a
-**sua** função executando passo a passo sobre o mapa do campus.
-
-Mecanismo proposto, do mais simples ao mais completo:
-
-- **Nível 1 de trace (barato):** o `wasm-ld` aceita `--wrap=prof`. Isso permite
-  interceptar as chamadas às funções do próprio aluno sem tocar no código dele.
-  A cada entrada e saída de `prof`, `largura_l`, `entrar_fila`, `sair_fila`, o
-  host tira um retrato do grafo (as 8 structs `vertice` mais as listas) lendo a
-  memória linear do WASM direto do JavaScript. O resultado é uma sequência de
-  quadros que a linha do tempo reproduz.
-- **Nível 2 de trace (mais fino):** compilar os arquivos do aluno com
-  `-finstrument-functions` para pegar entrada e saída de toda função, montando
-  a árvore de recursão completa. Útil principalmente para o nível 4: ver a
-  recursão da busca em profundidade descendo e voltando explica sozinha por que
-  cinza e preto são coisas diferentes.
-
-Ler a memória do WASM a partir do JS é direto: `instance.exports.memory.buffer`
-é um `ArrayBuffer` comum, e o layout da `struct vertice` é conhecido (basta
-exportar os offsets a partir do C com `offsetof` para não chutar).
-
-### 4.4 Quando algo falha
-
-A saída de erro atual já é excelente (cenário, esperado, obtido, desenho das
-listas). Na web ela ganha:
-
-- o **cenário do teste desenhado no mesmo mapa**, com o grafo esperado e o
-  grafo obtido lado a lado, e as arestas divergentes destacadas;
-- os erros do clang ancorados na linha certa do editor;
-- as três dicas atrás de um botão que se abre progressivamente, como já é hoje
-  com `make dica G=1,2,3`. A progressão precisa continuar custando um clique
-  consciente, senão vira resposta pronta.
+**Assistir ao próprio algoritmo.** Esta era a Fase 4 do plano, marcada como
+opcional, e acabou saindo junto porque ficou barata: o interpretador aceita um
+gravador que tira um retrato dos oito vértices sempre que `flag`, `dist` ou
+`cor` mudam, guardando a linha do arquivo do aluno que causou a mudança.
+A linha do tempo reproduz os quadros com o mapa mudando e a linha do código
+destacada. A onda concêntrica da busca em largura sai do papel.
 
 ---
 
-## 5. Progresso, persistência e ida e volta com o dojo local
+## 6. Por que dá para confiar (a resposta ao risco da seção 2)
 
-Sem servidor, o estado mora no navegador. Três camadas:
+Três provas, todas rodando no `make testes-tudo` e no deploy:
 
-1. **Automático:** `localStorage` (ou IndexedDB, se o volume crescer) guarda os
-   7 arquivos do aluno, o status dos 51 exercícios, o ciclo atual e o histórico.
-   Salva a cada pausa de digitação. É a rede de segurança contra fechar a aba.
-2. **Exportar / importar:** um botão gera um `.zip` com a pasta `src/aluno/`
-   exatamente no formato que o `make` local espera, e outro botão aceita esse
-   zip de volta. Assim, o que foi escrito no ônibus continua no PC e vice-versa,
-   e o repositório continua sendo o mesmo projeto, não dois.
-3. **Sincronia opcional via GitHub Gist:** com um token pessoal que o aluno cola
-   e que nunca sai do `localStorage`, o site salva o progresso num gist privado.
-   Isso resolve trocar de dispositivo sem carregar zip na mão. É opcional e fica
-   por último, porque envolve token e merece cuidado.
+**1. Suíte (`web/teste/suite.js`).** Os 51 testes contra o gabarito precisam
+dar "ok"; contra os esqueletos vazios precisam dar "a fazer". Mais uma bateria
+de erros plantados conferindo que o diagnóstico é o certo.
 
-O `make novociclo` vira um botão "novo ciclo" com a mesma semântica: arquiva o
-ciclo atual no histórico local, registra o placar, e regenera os esqueletos.
+**2. Teste diferencial (`web/teste/diferencial.js`).** Este é o que sustenta
+tudo. Vinte e cinco erros que aluno comete de verdade, cada um rodado nos
+**51 exercícios com o gcc e com o interpretador**, comparando os dois
+vereditos. São 1326 comparações por execução. O contrato verificado:
 
-**Aviso a colocar na interface:** limpar dados do navegador apaga tudo o que não
-foi exportado. Vale um lembrete discreto e persistente enquanto houver trabalho
-não exportado.
+- o site **nunca aprova** um exercício que o gcc reprova (nada de falso
+  verde, o pior defeito possível num dojo);
+- o site **nunca deixa passar** um erro que o gcc pega;
+- onde os dois divergem, é **comportamento indefinido em C** e o site é o mais
+  rigoroso dos dois. Esses casos são declarados um a um nas mutações: ler
+  memória não inicializada, usar memória depois do `free`, escrever além do
+  bloco. O gcc às vezes aprova por sorte (o lixo calhou de ser zero, o chunk
+  liberado ainda tinha o conteúdo antigo); o interpretador percebe sempre.
 
----
+**3. Teste de navegador (`web/teste/navegador.mjs`).** Chromium de verdade:
+escreve código no editor, roda o nível, confere as mensagens de erro, abre o
+campus, assiste à animação, exporta o zip, mede a tela do celular e falha se
+houver qualquer erro no console.
 
-## 6. Celular, tablet e a verdade sobre teclado
+### Dois defeitos reais que esses testes encontraram
 
-Escrever C de ponteiro num teclado de celular é sofrimento. Fingir que não é
-seria vender uma promessa que o projeto não cumpre. Postura proposta:
+O trabalho de garantir fidelidade acabou encontrando problemas no dojo de
+terminal, e os dois foram corrigidos no C:
 
-- **Notebook e tablet com teclado:** experiência completa, é o alvo principal.
-- **Celular:** modo leitura de primeira classe. Ver o progresso, ver o mapa do
-  campus, reler enunciados e dicas, revisar o código já escrito, assistir às
-  animações dos algoritmos. Editar é possível mas não é o foco.
-
-Concretamente isso significa: layout responsivo de verdade, o mapa e o painel
-funcionando bem em tela estreita, e o editor colapsável em vez de espremido.
-
-Editor: **CodeMirror 6** com `@codemirror/lang-cpp`. Leve (centenas de KB, não
-megabytes), funciona em toque, e o realce de C é suficiente. O Monaco daria
-autocomplete melhor, mas pesa demais para um site cujo orçamento de download já
-está comprometido com o compilador.
+- **O painel mostrava 0/51 no Linux e no macOS.** O `system()` montava o
+  comando com as aspas duplas extras do `cmd` do Windows, que o `sh` não
+  aceita. Só o Windows funcionava.
+- **O teste 5.4 não pegava o que dizia pegar.** O comentário promete que ali
+  "a profundidade daria a resposta errada", mas, como `inserir_aresta_l`
+  insere na cabeça, a ordem das arestas fazia a profundidade acertar por
+  acaso. Trocando a ordem de inserção, o teste passou a cumprir a promessa.
 
 ---
 
-## 7. Hospedagem e CI
+## 7. Levar o trabalho de um lado para o outro
 
-- Site estático publicado por GitHub Actions no GitHub Pages, a partir de um
-  workflow que roda a cada push na branch principal.
-- O job de build: compila o dojo nativo, gera `catalogo.json` e os stubs, roda
-  `make conferir` para garantir que os 51 testes continuam passando contra o
-  gabarito (regressão), compila `libdojo.a` para WASM, empacota o front e
-  publica.
-- Os artefatos do clang em WASM ficam versionados no repositório ou baixados de
-  uma release fixada. Nunca de um CDN de terceiros sem versão travada: se o
-  compilador mudar sozinho debaixo do projeto, os erros ficam impossíveis de
-  reproduzir.
-- **Service worker** para cache do compilador e do `libdojo.a`, com o site
-  funcionando offline depois da primeira visita. O download inicial pesado
-  precisa de um botão explícito, com barra de progresso e o tamanho declarado
-  antes de começar. Ninguém deve descobrir um download de dezenas de MB pelo
-  consumo de dados no fim do mês.
+Sem servidor, o estado mora no navegador:
 
----
+- **automático:** `localStorage` guarda os 7 arquivos, o placar, o ciclo e o
+  histórico, salvando a cada pausa de digitação;
+- **exportar/importar:** o botão gera um `.zip` com `src/aluno/` no formato
+  exato que o `Makefile` espera (é só descompactar por cima e rodar
+  `make n3`); a volta aceita `.zip`, `.c` soltos ou o backup `.json`;
+- **novo ciclo:** o equivalente ao `make novociclo`, arquivando no histórico.
 
-## 8. Riscos e o que fazer com cada um
+Aviso que fica visível na interface: limpar os dados do navegador apaga o que
+não foi exportado.
 
-| risco | probabilidade | plano |
-|---|---|---|
-| Clang em WASM pesado ou instável demais | média | Fase 0 é exatamente o spike para descobrir isso antes de construir qualquer outra coisa. Se falhar: plano B é o caminho C da seção 2 (compilar num Worker gratuito da Cloudflare), que preserva C de verdade e sacrifica só o "puramente estático" |
-| Versão do clang do build (CI) incompatível com a do navegador na hora de linkar | média | travar a **mesma** versão nos dois lados, declarada num único arquivo de configuração, e um teste de CI que faz o link de ponta a ponta |
-| `NULL` não dando trap no WASM | alta (é certo) | zona sentinela no `dojo_malloc`, conforme 2.2. Documentar a limitação em vez de escondê-la |
-| Catálogo do site divergir do C | alta se nada for feito | a regra da seção 3 existe só por causa disso. Gerar, nunca escrever à mão |
-| Escopo do campus visual crescer sem fim | alta | o campus visual é Fase 3, e só começa depois da Fase 2 estar fechada e utilizável. O site precisa já servir para estudar antes de ficar bonito |
-| Perda de progresso por limpeza de navegador | média | export em zip desde a Fase 2, não no fim |
+O plano previa também sincronia por gist com token pessoal. **Ficou de fora**,
+de propósito: é a única parte do projeto que lidaria com credencial, e o zip
+resolve o caso real (trocar de máquina) sem esse risco.
 
 ---
 
-## 9. Roadmap
+## 8. Celular, e a verdade sobre teclado
 
-Cada fase termina em algo que dá para usar. Nada de fase que só entrega
-infraestrutura invisível.
+Escrever C de ponteiro num teclado de celular é sofrimento, e fingir o
+contrário seria vender uma promessa que o projeto não cumpre. A postura, que
+se manteve do plano:
 
-### Fase 0: spike do compilador (o portão)
-Não construir mais nada antes disso responder sim.
-- Provar, num HTML solto, que dá para: compilar um `.c` no navegador, linkar
-  com um `libdojo.a` pré-compilado na CI, rodar e ler o resultado.
-- Medir: tamanho do download, tempo do primeiro load, tempo de recompilar um
-  arquivo do aluno.
-- Provar que um acesso inválido de memória vira exceção capturável e que um
-  laço infinito é interrompido por `terminate()`.
-- **Entregável:** um relatório curto com os números e a decisão entre caminho A
-  e caminho C. Tudo depois disso pressupõe essa resposta.
+- **notebook e tablet com teclado:** experiência completa, é o alvo principal;
+- **celular:** modo leitura de primeira classe (progresso, mapa, enunciados,
+  dicas, revisar o código, assistir às animações), com edição possível e
+  ajudada por uma barra de símbolos (`{ } ( ) [ ] ; * -> =`), mas sem fingir
+  que é confortável.
 
-### Fase 1: o dojo funcionando na web
-- `--dump-json` no C, geração do catálogo e dos stubs na CI.
-- `libdojo.a` compilado na CI.
-- Editor com os 7 arquivos, compilação, execução dos 51 testes, painel de
-  progresso, saída de erro fiel à do terminal, as 3 dicas progressivas.
-- **Entregável:** dá para fazer os 51 exercícios do celular ou de qualquer
-  máquina emprestada. Feio, mas completo e correto.
-
-### Fase 2: não perder trabalho
-- Persistência automática, export/import do zip compatível com o `make` local,
-  novo ciclo, histórico.
-- Deploy no GitHub Pages com service worker e cache offline.
-- **Entregável:** o site substitui o PC de verdade, com ida e volta segura.
-
-### Fase 3: o campus se acende
-- Mapa SVG dos 8 locais, estados visuais lidos da `struct vertice`.
-- As 12 funcionalidades destravando conforme os exercícios, agora visualmente.
-- A progressão do escuro para o campus iluminado.
-- **Entregável:** a parte lúdica que motiva voltar amanhã.
-
-### Fase 4: assistir ao próprio algoritmo
-- Trace por `--wrap` nas funções de entrada, retratos da memória, linha do tempo
-  com play, pause e passo a passo.
-- Começar pelo nível 5 (a onda da busca em largura), que é onde a animação
-  ensina mais por unidade de esforço.
-- **Entregável:** a ferramenta didática que o terminal jamais teve.
-
-### Fase 5: acabamento
-- Responsividade fina, acessibilidade (contraste, teclado, leitor de tela nos
-  estados do mapa), atalhos, tema claro e escuro, textos de erro revisados.
+Na prática: navegação no rodapé onde o polegar alcança, nenhuma rolagem
+horizontal, e o teste de navegador mede isso a cada execução.
 
 ---
 
-## 10. Estrutura de pastas proposta
+## 9. O que não foi feito
+
+Vale registrar o que ficou fora, para ninguém procurar:
+
+- **sincronia por gist** (seção 7), por causa do token;
+- **interpretar também os testes em C** (seção 4), por causa do custo de um
+  pré-processador completo; a duplicação é coberta pelo teste diferencial;
+- **`float` e `double`**: o interpretador recusa com uma mensagem explícita.
+  A matéria de grafos é inteira em inteiros e ponteiros;
+- **`goto`**: recusado com mensagem, e não cai na prova.
+
+---
+
+## 10. Estrutura final
 
 ```
 dojo-grafos/
-├── include/            (inalterado, compartilhado entre nativo e web)
-├── src/                (inalterado; main.c ganha --dump-json)
-├── gabarito/           (inalterado)
-├── tools/              (inalterado; ganha o script de build wasm)
-├── web/
-│   ├── src/
-│   │   ├── ui/         painel, editor, saída de testes
-│   │   ├── campus/     mapa SVG, animações, linha do tempo
-│   │   ├── runtime/    workers de compilação e execução, shim WASI
-│   │   └── storage/    localStorage, zip, gist
-│   ├── public/
-│   │   ├── catalogo.json     GERADO, não editar
-│   │   ├── campus.json       GERADO, não editar
-│   │   ├── stubs/            GERADO, não editar
-│   │   └── wasm/             libdojo.a + artefatos do clang
-│   └── index.html
-└── .github/workflows/deploy.yml
+├── include/, src/, gabarito/    o dojo de terminal, praticamente intocado
+│   └── src/core/main.c          + --dump-json  (e o conserto do system())
+├── tools/gerar_web_dados.py     gera web/dados/ a partir do C
+└── web/
+    ├── index.html, css/, sw.js, manifest.webmanifest
+    ├── js/c/                    lexer, pré-processador, parser, tipos,
+    │                            memória e interpretador de C
+    ├── js/dojo/                 runtime de testes, os 51 testes, motor,
+    │                            Campus EACH
+    ├── js/ui/                   editor, mapa SVG, markdown, zip, storage
+    ├── dados/                   GERADO -- catálogo, grafo.h, esqueletos,
+    │                            material de estudo
+    └── teste/                   suíte, mutações, diferencial, navegador
 ```
 
-O dojo local continua funcionando exatamente como hoje. A versão web é um
-consumidor a mais do mesmo C, não um fork.
-
----
-
-## 11. Decisões que ainda precisam da sua palavra
-
-1. **Nome e endereço do site.** Sugestão: publicar em
-   `https://<usuario>.github.io/aed2/` ou mover o dojo para um repositório
-   próprio. Repositório próprio deixa o Pages mais limpo, mas separa o dojo dos
-   materiais de estudo (`parte-1.md`, `parte-2.md`) que hoje moram juntos.
-2. **Os materiais de estudo entram no site?** Os dois markdown grandes de estudo
-   caem bem como uma aba de consulta ao lado do editor, e isso é barato de
-   fazer na Fase 1. Vale decidir cedo porque muda o layout.
-3. **Sincronia por gist:** entra ou fica de fora? Adiciona conveniência real e
-   também a única parte do projeto que lida com credencial.
-4. **Prioridade entre Fase 3 e Fase 4** caso o tempo aperte: campus bonito ou
-   algoritmo animado? A recomendação é campus primeiro (motiva mais no dia a
-   dia), mas a animação ensina mais.
+O dojo de terminal continua funcionando como sempre. O site é mais um
+consumidor do mesmo C, não um fork.

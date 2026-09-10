@@ -38,7 +38,10 @@ def main():
 
     binario = os.path.join(RAIZ, "dojo.exe")
     print("  compilando o dojo nativo...")
-    rodar(["make", "-s", "dojo.exe"])
+    # PY=<este interpretador>: em alguns sistemas (o runner do GitHub, entre
+    # eles) existe python3 mas nao existe python, e o Makefile usa python nos
+    # utilitarios.
+    rodar(["make", "-s", "dojo.exe", "PY=" + sys.executable])
 
     print("  extraindo o catalogo...")
     saida = subprocess.run([binario, "--dump-json"], cwd=RAIZ,

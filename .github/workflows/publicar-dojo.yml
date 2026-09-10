@@ -6,7 +6,9 @@ name: publicar o dojo
 
 on:
   push:
-    branches: [main, master]
+    # A branch de desenvolvimento esta aqui para o site ja ficar no ar antes
+    # do merge. Depois de juntar na principal, da para tirar esta linha.
+    branches: [main, master, claude/dojo-grafos-web-platform-71g96z]
     paths:
       - 'dojo-grafos/**'
       - 'parte-1.md'
@@ -40,7 +42,7 @@ jobs:
 
       - name: conferir os 51 exercicios contra o gabarito
         working-directory: dojo-grafos
-        run: make conferir
+        run: make conferir PY=python3
 
       - name: rodar o interpretador do navegador contra o gabarito
         working-directory: dojo-grafos

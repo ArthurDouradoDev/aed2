@@ -30,6 +30,15 @@ const grafoH   = fs.readFileSync(path.join(RAIZ, 'web/dados/grafo.h'), 'utf8');
 try { execFileSync('gcc', ['--version'], { stdio: 'ignore' }); }
 catch { console.log('gcc nao encontrado: teste diferencial pulado.'); process.exit(0); }
 
+/* O Makefile chama `python` nos utilitarios; em varios sistemas so existe
+   `python3`. Descobrimos qual dos dois responde e passamos para o make. */
+const PY = (() => {
+    for (const nome of ['python3', 'python']) {
+        try { execFileSync(nome, ['--version'], { stdio: 'ignore' }); return nome; } catch { }
+    }
+    return 'python';
+})();
+
 /* copia o projeto para um diretorio temporario */
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'dojo-dif-'));
 for (const d of ['include', 'src/core', 'src/testes', 'src/aluno', 'tools', 'gabarito']) {
@@ -53,7 +62,7 @@ function base() {
 async function nativos(fontes) {
     for (const f of fontes) fs.writeFileSync(path.join(TMP, 'src/aluno', f.nome), f.texto);
     fs.rmSync(path.join(TMP, 'build'), { recursive: true, force: true });
-    execFileSync('make', ['-s', 'dojo.exe'], { cwd: TMP, stdio: 'pipe' });
+    execFileSync('make', ['-s', 'dojo.exe', 'PY=' + PY], { cwd: TMP, stdio: 'pipe' });
 
     const total = catalogo.exercicios.length;
     const st = new Array(total);

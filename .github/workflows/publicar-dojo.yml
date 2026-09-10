@@ -2,6 +2,15 @@
 #
 # O catalogo, os esqueletos e o material sao gerados a partir do proprio C
 # antes de publicar, entao o site nunca fica dessincronizado do repositorio.
+#
+# Sao dois jobs independentes de proposito:
+#
+#   construir   rapido (segundos): gera os dados, confere os 51 exercicios
+#               contra o gabarito no gcc e no interpretador, e publica.
+#   fidelidade  lento (dez a vinte minutos): roda o teste diferencial, que
+#               compara gcc e interpretador nos 51 exercicios para cada erro
+#               plantado. Nao trava a publicacao; se ele ficar vermelho, o
+#               site ja esta no ar e da para reagir com calma.
 name: publicar o dojo
 
 on:
@@ -40,19 +49,20 @@ jobs:
         working-directory: dojo-grafos
         run: python3 tools/gerar_web_dados.py
 
-      - name: conferir os 51 exercicios contra o gabarito
+      - name: conferir os 51 exercicios no gcc
         working-directory: dojo-grafos
         run: make conferir PY=python3
 
-      - name: rodar o interpretador do navegador contra o gabarito
+      - name: conferir os 51 exercicios no interpretador do navegador
         working-directory: dojo-grafos
         run: node web/teste/suite.js
 
-      - name: provar que o navegador da o mesmo veredito do gcc
-        working-directory: dojo-grafos
-        run: node web/teste/diferencial.js
-
       - uses: actions/configure-pages@v5
+        with:
+          # Liga o GitHub Pages sozinho na primeira vez, para nao ser preciso
+          # mexer em Settings. Se a conta nao permitir, o passo falha e ai e
+          # so ligar a mao em Settings > Pages > Source: GitHub Actions.
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -67,3 +77,21 @@ jobs:
     steps:
       - id: deploy
         uses: actions/deploy-pages@v4
+
+  fidelidade:
+    # Roda em paralelo com o construir. A prova de que treinar no site vale
+    # para a prova: o mesmo veredito do gcc nos 51 exercicios, para cada erro
+    # que aluno comete de verdade.
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: gerar os dados a partir do C
+        working-directory: dojo-grafos
+        run: python3 tools/gerar_web_dados.py
+      - name: comparar o interpretador com o gcc nos 51 exercicios
+        working-directory: dojo-grafos
+        run: node web/teste/diferencial.js

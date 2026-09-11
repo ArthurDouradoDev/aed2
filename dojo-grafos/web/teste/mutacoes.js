@@ -35,6 +35,20 @@ export const MUTACOES = [
     { nome: 'inicializar_m so na diagonal', estrito: true, arquivo: 'n1_matriz.c',
       de: '    for (i = 0; i < V; i++)\n        for (j = 0; j < V; j++)\n            m[i][j] = 0;',
       para: '    for (i = 0; i < V; i++)\n        m[i][i] = 0;\n    j = 0;' },
+    /* Off-by-one no fim do laco. Os cenarios de 1.5, 1.6 e 2.7 nao tocavam
+       no ultimo vertice, entao esses tres erros passavam despercebidos nos
+       dois motores. As arestas 2->7 e 7->4 foram acrescentadas para fechar
+       o buraco; estas mutacoes existem para ele nao reabrir. */
+    { nome: 'grau_saida_m parando em V-1', arquivo: 'n1_matriz.c',
+      de: 'for (i = 0; i < V; i++) gs = gs + m[v1][i];',
+      para: 'for (i = 0; i < V - 1; i++) gs = gs + m[v1][i];' },
+    { nome: 'grau_entrada_m parando em V-1', arquivo: 'n1_matriz.c',
+      de: 'for (i = 0; i < V; i++) ge = ge + m[i][v1];',
+      para: 'for (i = 0; i < V - 1; i++) ge = ge + m[i][v1];' },
+    { nome: 'grau_entrada_l parando em V-1', arquivo: 'n2_lista.c',
+      de: 'for (i = 0; i < V; i++) {\n        no* p = g[i].inicio;',
+      para: 'for (i = 0; i < V - 1; i++) {\n        no* p = g[i].inicio;' },
+
     { nome: 'zerar_flags mexendo em inicio', arquivo: 'n4_profundidade.c',
       de: 'for (i = 0; i < V; i++) g[i].flag = 0;',
       para: 'for (i = 0; i < V; i++) g[i].inicio = NULL;' },

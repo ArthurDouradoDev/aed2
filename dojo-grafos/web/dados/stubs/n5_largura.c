@@ -7,7 +7,7 @@
  *  rodar os testes deste nivel : make n5
  *  pedir uma dica              : make dica N=5 E=<numero do exercicio>
  *
- *  Gerado em 2026-09-10
+ *  Esqueleto inicial
  * ========================================================================== */
 #include <stdio.h>
 #include <stdlib.h>

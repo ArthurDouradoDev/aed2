@@ -14,6 +14,7 @@ Nada disso deve ser editado a mao: o C e a fonte de verdade.
 """
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -61,6 +62,20 @@ def main():
     print("  gerando os esqueletos...")
     rodar([sys.executable, "tools/gerar_stubs.py", "--destino",
            os.path.join(DADOS, "stubs")], capture_output=True)
+
+    # O esqueleto local leva a data em que foi gerado, o que faz sentido para
+    # marcar o inicio de um ciclo de treino. Na copia do site essa data e so a
+    # do build: nao diz nada ao aluno e faria os 7 arquivos aparecerem como
+    # modificados a cada regeracao. Aqui ela vira um texto fixo.
+    for nome in ARQUIVOS_ALUNO:
+        caminho = os.path.join(DADOS, "stubs", nome)
+        if not os.path.exists(caminho):
+            continue
+        with open(caminho, encoding="utf-8") as f:
+            texto = f.read()
+        texto = re.sub(r"Gerado em \d{4}-\d{2}-\d{2}", "Esqueleto inicial", texto)
+        with open(caminho, "w", encoding="utf-8", newline="\n") as f:
+            f.write(texto)
 
     faltando = [a for a in ARQUIVOS_ALUNO
                 if not os.path.exists(os.path.join(DADOS, "stubs", a))]

@@ -85,24 +85,30 @@ void t1_4(void) {
 
 void t1_5(void) {
     int m[V][V];
-    CENARIO("Saem do vertice 2 as arestas 2->0, 2->4 e 2->5.\n"
-            "  O vertice 3 e isolado e o 6 so tem o laco 6->6.");
+    CENARIO("Saem do vertice 2 as arestas 2->0, 2->4, 2->5 e 2->7.\n"
+            "  O vertice 3 e isolado e o 6 so tem o laco 6->6.\n"
+            "  O 2->7 esta ai de proposito: e a ULTIMA coluna. Quem escreve\n"
+            "  i < V-1 no lugar de i < V perde essa coluna e conta 3.");
     inicializar_m(m);
     inserir_aresta_m(m, 2, 0); inserir_aresta_m(m, 2, 4); inserir_aresta_m(m, 2, 5);
+    inserir_aresta_m(m, 2, 7);
     inserir_aresta_m(m, 1, 2); inserir_aresta_m(m, 6, 6);
-    ESPERA_INT("grau_saida_m(m, 2)", grau_saida_m(m, 2), 3);
+    ESPERA_INT("grau_saida_m(m, 2)", grau_saida_m(m, 2), 4);
     ESPERA_INT("grau_saida_m(m, 3)  -- vertice isolado", grau_saida_m(m, 3), 0);
     ESPERA_INT("grau_saida_m(m, 6)  -- o laco conta como saida", grau_saida_m(m, 6), 1);
 }
 
 void t1_6(void) {
     int m[V][V];
-    CENARIO("Chegam no vertice 4 as arestas 0->4, 2->4 e 5->4.\n"
-            "  Cuidado: grau de ENTRADA percorre a COLUNA, nao a linha.");
+    CENARIO("Chegam no vertice 4 as arestas 0->4, 2->4, 5->4 e 7->4.\n"
+            "  Cuidado: grau de ENTRADA percorre a COLUNA, nao a linha.\n"
+            "  O 7->4 esta ai de proposito: e a ULTIMA linha. Quem escreve\n"
+            "  i < V-1 no lugar de i < V perde essa linha e conta 3.");
     inicializar_m(m);
     inserir_aresta_m(m, 0, 4); inserir_aresta_m(m, 2, 4); inserir_aresta_m(m, 5, 4);
+    inserir_aresta_m(m, 7, 4);
     inserir_aresta_m(m, 4, 1); inserir_aresta_m(m, 6, 6);
-    ESPERA_INT("grau_entrada_m(m, 4)", grau_entrada_m(m, 4), 3);
+    ESPERA_INT("grau_entrada_m(m, 4)", grau_entrada_m(m, 4), 4);
     ESPERA_INT("grau_entrada_m(m, 1)", grau_entrada_m(m, 1), 1);
     ESPERA_INT("grau_entrada_m(m, 3)  -- ninguem aponta pro 3", grau_entrada_m(m, 3), 0);
     ESPERA_INT("grau_entrada_m(m, 6)  -- o laco conta como entrada",
@@ -239,11 +245,14 @@ void t2_6(void) {
 
 void t2_7(void) {
     GRAFO_NOVO(g);
-    CENARIO("Chegam no vertice 4 as arestas 0->4, 2->4 e 5->4.\n"
-            "  Em lista de adjacencia isso obriga a varrer TODOS os vertices.");
+    CENARIO("Chegam no vertice 4 as arestas 0->4, 2->4, 5->4 e 7->4.\n"
+            "  Em lista de adjacencia isso obriga a varrer TODOS os vertices.\n"
+            "  O 7->4 esta ai de proposito: e o ULTIMO vertice. Quem para em\n"
+            "  V-1 nunca olha a lista dele e conta 3.");
     inserir_aresta_l(g, 0, 4); inserir_aresta_l(g, 2, 4); inserir_aresta_l(g, 5, 4);
+    inserir_aresta_l(g, 7, 4);
     inserir_aresta_l(g, 4, 1); inserir_aresta_l(g, 6, 6);
-    ESPERA_INT("grau_entrada_l(g, 4)", grau_entrada_l(g, 4), 3);
+    ESPERA_INT("grau_entrada_l(g, 4)", grau_entrada_l(g, 4), 4);
     ESPERA_INT("grau_entrada_l(g, 1)", grau_entrada_l(g, 1), 1);
     ESPERA_INT("grau_entrada_l(g, 3)  -- ninguem aponta pro 3",
                grau_entrada_l(g, 3), 0);

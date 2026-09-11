@@ -20,8 +20,17 @@
  *      caderno, pag. 6 (Problema 3) / lista ex. 4
  * ------------------------------------------------------------------ */
 vertice* transposta_l(vertice* g) {
-    FALTA_IMPLEMENTAR();
-    return NULL;
+    vertice* gt = alocar_l();
+    int v1;
+    inicializar_l(gt);
+    for (v1 = 0; v1 < V; v1++) {
+        no* p = g[v1].inicio;
+        while (p != NULL) {
+            inserir_aresta_l(gt, p->adj, v1);
+            p = p->prox;
+        }
+    }
+    return gt;
 }
 
 /* ---- 2. matriz_p_lista
@@ -29,8 +38,14 @@ vertice* transposta_l(vertice* g) {
  *      caderno, pag. 8 / lista ex. 5
  * ------------------------------------------------------------------ */
 vertice* matriz_p_lista(int m[V][V]) {
-    FALTA_IMPLEMENTAR();
-    return NULL;
+    vertice* g = alocar_l();
+    int v1, v2;
+    inicializar_l(g);
+    for (v1 = 0; v1 < V; v1++)
+        for (v2 = 0; v2 < V; v2++)
+            if (aresta_existe_m(m, v1, v2))
+                inserir_aresta_l(g, v1, v2);
+    return g;
 }
 
 /* ---- 3. subgrafo_lm
@@ -38,8 +53,15 @@ vertice* matriz_p_lista(int m[V][V]) {
  *      caderno, pag. 5-6 (Problema 2) / lista ex. 8
  * ------------------------------------------------------------------ */
 bool subgrafo_lm(vertice* g1, int m2[V][V]) {
-    FALTA_IMPLEMENTAR();
-    return FALSE;
+    int v1;
+    for (v1 = 0; v1 < V; v1++) {
+        no* p = g1[v1].inicio;
+        while (p != NULL) {
+            if (!aresta_existe_m(m2, v1, p->adj)) return FALSE;
+            p = p->prox;
+        }
+    }
+    return TRUE;
 }
 
 /* ---- 4. contar_lacos_l
@@ -47,8 +69,10 @@ bool subgrafo_lm(vertice* g1, int m2[V][V]) {
  *      lista ex. 1
  * ------------------------------------------------------------------ */
 int contar_lacos_l(vertice* g) {
-    FALTA_IMPLEMENTAR();
-    return 0;
+    int v1, total = 0;
+    for (v1 = 0; v1 < V; v1++)
+        if (aresta_existe_l(g, v1, v1)) total++;
+    return total;
 }
 
 /* ---- 5. remover_lacos_l
@@ -56,7 +80,9 @@ int contar_lacos_l(vertice* g) {
  *      lista ex. 2
  * ------------------------------------------------------------------ */
 void remover_lacos_l(vertice* g) {
-    FALTA_IMPLEMENTAR();
+    int v1;
+    for (v1 = 0; v1 < V; v1++)
+        if (aresta_existe_l(g, v1, v1)) excluir_aresta_l(g, v1, v1);
 }
 
 /* ---- 6. destruir_arestas_l
@@ -65,7 +91,16 @@ void remover_lacos_l(vertice* g) {
  *      lista ex. 3
  * ------------------------------------------------------------------ */
 void destruir_arestas_l(vertice* g) {
-    FALTA_IMPLEMENTAR();
+    int v1;
+    for (v1 = 0; v1 < V; v1++) {
+        no* p = g[v1].inicio;
+        while (p != NULL) {
+            no* prox = p->prox;
+            free(p);
+            p = prox;
+        }
+        g[v1].inicio = NULL;
+    }
 }
 
 /* ---- 7. diferenca_l
@@ -73,8 +108,18 @@ void destruir_arestas_l(vertice* g) {
  *      lista ex. 9
  * ------------------------------------------------------------------ */
 vertice* diferenca_l(vertice* g1, vertice* g2) {
-    FALTA_IMPLEMENTAR();
-    return NULL;
+    vertice* g3 = alocar_l();
+    int v1;
+    inicializar_l(g3);
+    for (v1 = 0; v1 < V; v1++) {
+        no* p = g1[v1].inicio;
+        while (p != NULL) {
+            if (!aresta_existe_l(g2, v1, p->adj))
+                inserir_aresta_l(g3, v1, p->adj);
+            p = p->prox;
+        }
+    }
+    return g3;
 }
 
 /* ---- 8. completo_l
@@ -82,8 +127,11 @@ vertice* diferenca_l(vertice* g1, vertice* g2) {
  *      lista ex. 19
  * ------------------------------------------------------------------ */
 bool completo_l(vertice* g) {
-    FALTA_IMPLEMENTAR();
-    return FALSE;
+    int v1, v2;
+    for (v1 = 0; v1 < V; v1++)
+        for (v2 = 0; v2 < V; v2++)
+            if (v1 != v2 && !aresta_existe_l(g, v1, v2)) return FALSE;
+    return TRUE;
 }
 
 /* ---- 9. complemento_l
@@ -92,7 +140,13 @@ bool completo_l(vertice* g) {
  *      lista ex. 20
  * ------------------------------------------------------------------ */
 vertice* complemento_l(vertice* g) {
-    FALTA_IMPLEMENTAR();
-    return NULL;
+    vertice* gc = alocar_l();
+    int v1, v2;
+    inicializar_l(gc);
+    for (v1 = 0; v1 < V; v1++)
+        for (v2 = 0; v2 < V; v2++)
+            if (v1 != v2 && !aresta_existe_l(g, v1, v2))
+                inserir_aresta_l(gc, v1, v2);
+    return gc;
 }
 

@@ -39,6 +39,29 @@ export const MUTACOES = [
        no ultimo vertice, entao esses tres erros passavam despercebidos nos
        dois motores. As arestas 2->7 e 7->4 foram acrescentadas para fechar
        o buraco; estas mutacoes existem para ele nao reabrir. */
+    /* Confunde "existe v1 -> v2" com "chega alguma aresta em v2". Passava em
+       2.3 e so aparecia la no 2.7, com um numero sem pe nem cabeca. */
+    { nome: 'aresta_existe_l varrendo o grafo todo', arquivo: 'n2_lista.c',
+      de: 'bool aresta_existe_l(vertice* g, int v1, int v2) {\n' +
+          '    no* p = g[v1].inicio;\n' +
+          '    while (p) {\n' +
+          '        if (p->adj == v2) return TRUE;\n' +
+          '        p = p->prox;\n' +
+          '    }\n' +
+          '    return FALSE;\n' +
+          '}',
+      para: 'bool aresta_existe_l(vertice* g, int v1, int v2) {\n' +
+            '    int k;\n' +
+            '    for (k = 0; k < V; k++) {\n' +
+            '        no* p = g[k].inicio;\n' +
+            '        while (p) {\n' +
+            '            if (p->adj == v2) return TRUE;\n' +
+            '            p = p->prox;\n' +
+            '        }\n' +
+            '    }\n' +
+            '    return FALSE;\n' +
+            '}' },
+
     { nome: 'grau_saida_m parando em V-1', arquivo: 'n1_matriz.c',
       de: 'for (i = 0; i < V; i++) gs = gs + m[v1][i];',
       para: 'for (i = 0; i < V - 1; i++) gs = gs + m[v1][i];' },

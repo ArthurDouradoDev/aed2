@@ -153,7 +153,10 @@ void t2_2(void) {
 void t2_3(void) {
     GRAFO_NOVO(g);
     CENARIO("Listas montadas por fora: 1 -> 2, 2 -> 4, 4 -> 4 (laco).\n"
-            "  aresta_existe_l percorre a lista de v1 procurando adj == v2.");
+            "  aresta_existe_l percorre SO a lista de v1 procurando adj == v2.\n"
+            "  A palavra \"so\" e o exercicio inteiro: quem varre os %d vertices\n"
+            "  atras de adj == v2 responde outra pergunta (\"chega alguem no v2?\")\n"
+            "  e acerta por acaso boa parte dos casos.", V);
     dj_liga(g, 1, 2); dj_liga(g, 2, 4); dj_liga(g, 4, 4);
     ESPERA_BOOL("aresta_existe_l(g, 1, 2)", aresta_existe_l(g, 1, 2), TRUE);
     ESPERA_BOOL("aresta_existe_l(g, 4, 4)  -- laco", aresta_existe_l(g, 4, 4), TRUE);
@@ -161,6 +164,12 @@ void t2_3(void) {
                 aresta_existe_l(g, 2, 1), FALSE);
     ESPERA_BOOL("aresta_existe_l(g, 0, 3)  -- lista vazia",
                 aresta_existe_l(g, 0, 3), FALSE);
+    /* Estes dois separam "existe v1 -> v2" de "chega alguma aresta em v2":
+       o 2 e o 4 recebem arestas, mas nao vindas do 0 nem do 3. */
+    ESPERA_BOOL("aresta_existe_l(g, 0, 2)  -- chega aresta no 2, mas nao vinda do 0",
+                aresta_existe_l(g, 0, 2), FALSE);
+    ESPERA_BOOL("aresta_existe_l(g, 3, 4)  -- chega aresta no 4, mas nao vinda do 3",
+                aresta_existe_l(g, 3, 4), FALSE);
 }
 
 void t2_4(void) {

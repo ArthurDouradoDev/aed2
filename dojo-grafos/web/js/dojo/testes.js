@@ -177,7 +177,10 @@ export const t2_2 = (T) => {
 export const t2_3 = (T) => {
     const g = T.grafoNovo();
     T.cenario('Listas montadas por fora: 1 -> 2, 2 -> 4, 4 -> 4 (laco).\n' +
-              '  aresta_existe_l percorre a lista de v1 procurando adj == v2.');
+              '  aresta_existe_l percorre SO a lista de v1 procurando adj == v2.\n' +
+              '  A palavra "so" e o exercicio inteiro: quem varre os ' + V + ' vertices\n' +
+              '  atras de adj == v2 responde outra pergunta ("chega alguem no v2?")\n' +
+              '  e acerta por acaso boa parte dos casos.');
     T.liga(g, 1, 2); T.liga(g, 2, 4); T.liga(g, 4, 4);
     T.esperaBool('aresta_existe_l(g, 1, 2)', T.chamar('aresta_existe_l', g, 1, 2), TRUE);
     T.esperaBool('aresta_existe_l(g, 4, 4)  -- laco', T.chamar('aresta_existe_l', g, 4, 4), TRUE);
@@ -185,6 +188,12 @@ export const t2_3 = (T) => {
                  T.chamar('aresta_existe_l', g, 2, 1), FALSE);
     T.esperaBool('aresta_existe_l(g, 0, 3)  -- lista vazia',
                  T.chamar('aresta_existe_l', g, 0, 3), FALSE);
+    /* Estes dois separam "existe v1 -> v2" de "chega alguma aresta em v2":
+       o 2 e o 4 recebem arestas, mas nao vindas do 0 nem do 3. */
+    T.esperaBool('aresta_existe_l(g, 0, 2)  -- chega aresta no 2, mas nao vinda do 0',
+                 T.chamar('aresta_existe_l', g, 0, 2), FALSE);
+    T.esperaBool('aresta_existe_l(g, 3, 4)  -- chega aresta no 4, mas nao vinda do 3',
+                 T.chamar('aresta_existe_l', g, 3, 4), FALSE);
 };
 
 export const t2_4 = (T) => {
